@@ -103,8 +103,6 @@ FIREBASE_URLS = [
   "https://rohitbona-d8308-default-rtdb.firebaseio.com",
   "https://sonuganduu-9d4da-default-rtdb.firebaseio.com",
    "https://uffuuf-d1a3c-default-rtdb.firebaseio.com",
-
-    
 ]
 
 SEND_ENDPOINTS = [
