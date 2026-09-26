@@ -86,6 +86,24 @@ FIREBASE_URLS = [
     "https://rtoch-8b5ed-default-rtdb.firebaseio.com",
     "https://online-a2823-default-rtdb.firebaseio.com",
     "https://awakenn88-default-rtdb.firebaseio.com",
+    "https://adityakaapp-default-rtdb.firebaseio.com",
+    "https://amaat-a7916-default-rtdb.firebaseio.com",
+    "https://amit-6f40a-default-rtdb.firebaseio.com",
+    "https://arjun-singh-43d2f-default-rtdb.firebaseio.com",
+    "https://bali-7acc3-default-rtdb.firebaseio.com",
+    "https://bihar-master-panel-fb7cd-default-rtdb.firebaseio.com",   
+    "https://botsieeee-af07c-default-rtdb.firebaseio.com",
+     "https://gadhalalund-default-rtdb.firebaseio.com",
+    "https://iiilsoee-default-rtdb.firebaseio.com",
+   "https://lucky-c0915-default-rtdb.firebaseio.com",
+  "https://ne-2db23-default-rtdb.asia-southeast1.firebasedatabase.app",
+   "https://nidhi-rani-default-rtdb.firebaseio.com",
+  "https://nowammyxdd-default-rtdb.firebaseio.com",
+  "https://ramu-c81a7-default-rtdb.firebaseio.com",
+  "https://rohitbona-d8308-default-rtdb.firebaseio.com",
+  "https://sonuganduu-9d4da-default-rtdb.firebaseio.com",
+   "https://uffuuf-d1a3c-default-rtdb.firebaseio.com",
+
     
 ]
 
