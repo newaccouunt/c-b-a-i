@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
 ╔══════════════════════════════════════════════════════════╗
-║   🔥 @BRONX_ULTRA BOMBER API v8.0 — ULTRA FLASH        ║
+║   🔥 @BRONX_ULTRA BOMBER API v8.1 — ULTRA FLASH        ║
 ║   ▸ API Key Protected (6 keys)                          ║
 ║   ▸ ALL Firebase (dedupe + kept)                        ║
 ║   ▸ TRUE Full Fan-Out (ALL devices × count parallel)    ║
+║   ▸ Full Symbol/Space/Emoji Support ✅                  ║
 ║   ▸ /stop endpoint                                      ║
 ║   ▸ Flash Speed 🚄🚄🚄                                   ║
 ║   ▸ Vercel Ready                                        ║
@@ -14,6 +15,7 @@
 import asyncio
 import time
 import os
+import urllib.parse
 from datetime import datetime
 from uuid import uuid4
 from collections import defaultdict
@@ -124,7 +126,7 @@ CONNECT_TIMEOUT = 2
 DEVICE_CACHE_TTL = 30
 
 API_NAME = "@BRONX_ULTRA"
-API_VERSION = "8.0"
+API_VERSION = "8.1"
 
 # ═══════════════════════════════════════════════════════════
 # 🚀 APP
@@ -194,6 +196,38 @@ def clean_url(url: str) -> str:
     if url.endswith(".json"):
         url = url[:-5]
     return url.rstrip("/")
+
+
+def fix_message(raw_message, is_get: bool) -> str:
+    """
+    ✅ Fix message so ALL symbols/spaces/emojis work:
+      - '+' → space (GET only, URL standard)
+      - '\\n' literal → real newline
+      - '%20', '%23' etc → decoded (FastAPI already does this)
+      - strip extra whitespace at edges
+    """
+    if raw_message is None:
+        return ""
+
+    if not isinstance(raw_message, str):
+        raw_message = str(raw_message)
+
+    msg = raw_message
+
+    # GET me '+' ko space banao (URL query standard)
+    if is_get:
+        # Agar FastAPI ne already decode kar diya aur '+' as-is aaya,
+        # toh use space banao (kyunki user ka intent space hi tha)
+        msg = msg.replace("+", " ")
+
+    # Literal '\n' (backslash + n) ko real newline banao
+    msg = msg.replace("\\n", "\n")
+    msg = msg.replace("\\t", "\t")
+
+    # Aage/peeche ke extra spaces/newlines hatao
+    msg = msg.strip()
+
+    return msg
 
 
 # ═══════════════════════════════════════════════════════════
@@ -325,7 +359,7 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
         print(f"[{jid}] 🔥 {API_NAME} v{API_VERSION} — ULTRA FLASH")
         print(f"[{jid}] Key        : {api_key}")
         print(f"[{jid}] Target     : {number}")
-        print(f"[{jid}] Message    : {message[:40]}")
+        print(f"[{jid}] Message    : {message[:60]}")
         print(f"[{jid}] Devices    : {ndev}")
         print(f"[{jid}] Per-device : {count}")
         print(f"[{jid}] TOTAL SMS  : {total}")
@@ -395,6 +429,7 @@ async def root():
             "devices": "/devices?key=YOUR_KEY",
         },
         "header_alternative": "X-API-Key: YOUR_KEY",
+        "tip": "POST JSON use karo for full symbol/emoji support 🎯",
     }
 
 
@@ -418,25 +453,30 @@ async def keys_info():
 
 
 # ═══════════════════════════════════════════════════════════
-# 🚀 /send
+# 🚀 /send — FULL SYMBOL SUPPORT
 # ═══════════════════════════════════════════════════════════
 @app.api_route("/send", methods=["GET", "POST"])
 async def send_endpoint(request: Request, bg: BackgroundTasks):
-    if request.method == "GET":
-        query_data = dict(request.query_params)
-        body_data = {}
-    else:
-        query_data = dict(request.query_params)
+    is_get = request.method == "GET"
+
+    # ─── Parse query (both GET and POST) ───────────────────
+    query_data = dict(request.query_params)
+
+    # ─── Parse body (POST only) ────────────────────────────
+    body_data = {}
+    if not is_get:
         try:
             body_data = await request.json()
         except Exception:
             try:
-                body_data = dict(await request.form())
+                form = await request.form()
+                body_data = dict(form)
             except Exception:
                 body_data = {}
 
     merged = {**query_data, **body_data}
 
+    # ─── Key check ─────────────────────────────────────────
     api_key = extract_key(request, query_data, body_data)
     if not api_key:
         return JSONResponse(
@@ -450,10 +490,18 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
             status_code=401,
         )
 
-    message = merged.get("message") or merged.get("msg")
-    number = merged.get("number") or merged.get("num") or merged.get("numer")
+    # ─── Message (FULL SYMBOL SUPPORT) ─────────────────────
+    raw_message = merged.get("message") or merged.get("msg") or ""
+    message = fix_message(raw_message, is_get)
+
+    # ─── Number ────────────────────────────────────────────
+    number = merged.get("number") or merged.get("num") or merged.get("numer") or ""
+    number = str(number).strip()
+
+    # ─── Count ─────────────────────────────────────────────
     count_str = merged.get("count", "1")
 
+    # ─── Validation ────────────────────────────────────────
     if not message:
         return JSONResponse(
             {"success": False, "api": API_NAME, "error": "Missing message"}, 400
@@ -463,8 +511,8 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
             {"success": False, "api": API_NAME, "error": "Missing number"}, 400
         )
 
-    number = str(number).strip().replace("+", "").replace(" ", "").replace("-", "")
-    if not number.isdigit() or len(number) < 10:
+    clean_number = number.replace("+", "").replace(" ", "").replace("-", "")
+    if not clean_number.isdigit() or len(clean_number) < 10:
         return JSONResponse(
             {"success": False, "api": API_NAME, "error": "Invalid number"}, 400
         )
@@ -478,7 +526,8 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
             {"success": False, "api": API_NAME, "error": "invalid count"}, 400
         )
 
-    bg.add_task(bomb_worker, number, message, count, api_key)
+    # ─── Launch ────────────────────────────────────────────
+    bg.add_task(bomb_worker, clean_number, message, count, api_key)
 
     return {
         "success": True,
@@ -486,11 +535,13 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
         "version": API_VERSION,
         "job_started": True,
         "key_used": api_key,
-        "target": number,
+        "target": clean_number,
+        "message_sent": message,       # ✅ confirm — kya bheja
+        "message_length": len(message),
         "per_device": count,
         "mode": "ULTRA FLASH FAN-OUT",
         "note": "Total SMS = (online devices) × count — ALL parallel",
-        "stop_url": f"/stop?key={api_key}&number={number}",
+        "stop_url": f"/stop?key={api_key}&number={clean_number}",
     }
 
 
