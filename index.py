@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ╔══════════════════════════════════════════════════════════╗
-║   🔥 @BRONX_ULTRA BOMBER API v8.2 — ULTRA FLASH         ║
+║   🔥 @BRONX_ULTRA BOMBER API v8.2 — ULTRA FLAS         ║
 ║   ▸ API Key Protected                                   ║
 ║   ▸ Firebase URLs — SEEDHA CODE ME                      ║
 ║   ▸ TRUE Full Fan-Out                                   ║
