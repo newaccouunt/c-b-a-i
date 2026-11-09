@@ -42,6 +42,17 @@ VALID_KEYS = {
 # ═══════════════════════════════════════════════════════════
 FIREBASE_URLS_RAW = [
     "https://total-ocean-469810-i8-default-rtdb.firebaseio.com",
+     "https://sanjay-e3c4c-default-rtdb.firebaseio.com",
+  "https://rupesh-123-default-rtdb.firebaseio.com",
+    "https://ueur-357f2-default-rtdb.firebaseio.com",
+   "https://ladh-cb-default-rtdb.firebaseio.com",
+   "https://victim-bdf8f-default-rtdb.firebaseio.com",
+   "https://pinku-59a20-default-rtdb.firebaseio.com",
+    "https://hardik-5a170-default-rtdb.firebaseio.com",
+   "https://chutad-5eca0-default-rtdb.firebaseio.com",
+    "https://ranjit-8a94c-default-rtdb.firebaseio.com",
+    "https://panel-65a86-default-rtdb.firebaseio.com",
+   "https://kisan10c-default-rtdb.firebaseio.com",
     
 ]
 
